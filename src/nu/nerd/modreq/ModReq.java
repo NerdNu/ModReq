@@ -17,6 +17,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permissible;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -60,6 +61,9 @@ public class ModReq extends JavaPlugin {
 	@Override
     public boolean onCommand(CommandSender sender, Command command, String name, String[] args) {
 		String senderName = ChatColor.stripColor(sender.getName());
+		if (sender instanceof ConsoleCommandSender) {
+			senderName = "Console";
+		}
         if (command.getName().equalsIgnoreCase("modreq")) {
             if (args.length == 0) {
                 return false;
@@ -238,9 +242,9 @@ public class ModReq extends JavaPlugin {
             	
             	String doneMessage = null;
             	
-            	if (args.length > 1) {
-            		StringBuilder doneMessageBuilder = new StringBuilder(args[0]);
-                    for (int i = 1; i < args.length; i++) {
+            	if (args.length > 2) {
+            		StringBuilder doneMessageBuilder = new StringBuilder(args[1]);
+                    for (int i = 2; i < args.length; i++) {
                         doneMessageBuilder.append(" ").append(args[i]);
                     }
                     
@@ -251,7 +255,7 @@ public class ModReq extends JavaPlugin {
             	
 		        if (sender.hasPermission("modreq.done")) {
 		        	String msg = "";
-		        	msg = String.format("[ModReq] Request #%d has been completed by %s", requestId, sender.getName());
+		        	msg = String.format("%s[ModReq] Request #%d has been completed by %s", ChatColor.GREEN, requestId, senderName);
 	        		messageMods(msg);
 	        		
 			        if (doneMessage != null && !doneMessage.isEmpty()) {
@@ -271,11 +275,18 @@ public class ModReq extends JavaPlugin {
 		        	req.setStatus(RequestStatus.CLOSED);
 		        	req.setCloseTime(System.currentTimeMillis());
 		            req.setCloseMessage(doneMessage);
+		            req.setAssignedMod(senderName);
 		            
 		            Player requestCreator = getServer().getPlayerExact(req.getPlayerName());
 		            if (requestCreator != null) {
 		            	if (!requestCreator.getName().equalsIgnoreCase(senderName)) {
-		            		requestCreator.sendMessage(senderName + " completed your mod request.");
+		            		String message = "";
+		            		if (doneMessage != null && !doneMessage.isEmpty()) {
+		            			message = String.format("%s completed your request - %s%s", senderName, ChatColor.GRAY, doneMessage);
+		            		} else {
+		            			message = String.format("%s completed your request", senderName);
+		            		}
+		            		requestCreator.sendMessage(ChatColor.GREEN + message);
 		            	}
 		            	else {
 		            		messageMods(ChatColor.GREEN + String.format("[ModReq] Request #%d no longer needs to be handled", requestId));

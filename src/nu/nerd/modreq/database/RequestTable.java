@@ -29,6 +29,18 @@ public class RequestTable {
 		return retVal;
 	}
 	
+	public List<Request> getMissedClosedRequests(String username) {
+		List<Request> retVal = new ArrayList<Request>();
+		
+		Query<Request> query = plugin.getDatabase().find(Request.class).where().ieq("playerName", username).eq("status", RequestStatus.CLOSED).eq("closeSeenByUser", false).query();
+		
+		if (query != null) {
+			retVal.addAll(query.findList());
+		}
+		
+		return retVal;
+	}
+	
 	public int getNumRequestFromUser(String username) {
 		int retVal = 0;
 		Query<Request> query = plugin.getDatabase().find(Request.class).where().ieq("playerName", username).query();
