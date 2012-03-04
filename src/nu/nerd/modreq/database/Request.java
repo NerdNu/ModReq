@@ -34,7 +34,7 @@ public class Request {
 	private RequestStatus status;
 	
 	@NotNull
-	private Location requestLocation;
+	private String requestLocation;
 	private String closeMessage;
 	private long closeTime;
 	private boolean closeSeenByUser;
@@ -88,11 +88,11 @@ public class Request {
 		return this.status;
 	}
 	
-	public void setRequestLocation(Location requestLocation) {
+	public void setRequestLocation(String requestLocation) {
 		this.requestLocation = requestLocation;
 	}
 	
-	public Location getRequestLocation() {
+	public String getRequestLocation() {
 		return this.requestLocation;
 	}
 	
@@ -116,7 +116,7 @@ public class Request {
 		this.closeSeenByUser = closeSeenByUser;
 	}
 	
-	public boolean getCloseSeenByUser() {
+	public boolean isCloseSeenByUser() {
 		return this.closeSeenByUser;
 	}
 	
@@ -124,7 +124,7 @@ public class Request {
 		this.flagForAdmin = flagForAdmin;
 	}
 	
-	public boolean getFlagForAdmin() {
+	public boolean isFlagForAdmin() {
 		return this.flagForAdmin;
 	}
 }

@@ -15,7 +15,7 @@ class ModReqListener implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onPlayerJoin(PlayerJoinEvent event) {
         if (event.getPlayer().hasPermission("modreq.check")) {
-            int open = 0; // fill in open request count from DB
+            int open = plugin.reqTable.getTotalOpenRequest();
             event.getPlayer().sendMessage(ChatColor.GREEN + "There are " + open + " open mod requests. Type /check to see them.");
         }
     }
