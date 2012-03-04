@@ -46,10 +46,10 @@ commands:
     usage: |
            /<command> <#>: Reopen closed request
   elevate:
-  	description: Set flag for admin on a request
-  	permission: modreq.mod
-  	usage: |
-  	       /<command> <#>: Flag a request for an admin.
+    description: Set flag for admin on a request
+    permission: modreq.mod
+    usage: |
+           /<command> <#>: Flag a request for an admin.
 
 
 permissions:
