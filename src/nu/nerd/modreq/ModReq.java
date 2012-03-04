@@ -75,6 +75,8 @@ public class ModReq extends JavaPlugin {
 	            req.setRequest(req.toString());
 	            req.setRequestLocation(player.getLocation());
 	            req.setStatus(RequestStatus.OPEN);
+	            
+	            reqTable.save(req);
             }
         }
         else if (command.getName().equalsIgnoreCase("check")) {
