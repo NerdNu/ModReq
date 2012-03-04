@@ -28,12 +28,17 @@ public class Request {
 	private String request;
 	
 	@NotNull
+	private long requestTime;
+	
+	@NotNull
 	private RequestStatus status;
 	
 	@NotNull
 	private Location requestLocation;
 	private String closeMessage;
+	private long closeTime;
 	private boolean closeSeenByUser;
+	private boolean flagForAdmin;
 	
 	public void setId(int id) {
 		this.id = id;
@@ -67,6 +72,14 @@ public class Request {
 		return this.request;
 	}
 	
+	public void setRequestTime(long requestTime) {
+		this.requestTime = requestTime;
+	}
+	
+	public long getRequestTime() {
+		return this.requestTime;
+	}
+	
 	public void setStatus(RequestStatus status) {
 		this.status = status;
 	}
@@ -91,6 +104,14 @@ public class Request {
 		return this.closeMessage;
 	}
 	
+	public void setCloseTime(long closeTime) {
+		this.closeTime = closeTime;
+	}
+	
+	public long getCloseTime() {
+		return this.closeTime;
+	}
+	
 	public void setCloseSeenByUser(boolean closeSeenByUser) {
 		this.closeSeenByUser = closeSeenByUser;
 	}
@@ -98,4 +119,12 @@ public class Request {
 	public boolean getCloseSeenByUser() {
 		return this.closeSeenByUser;
 	}
- }
+	
+	public void setFlagForAdmin(boolean flagForAdmin) {
+		this.flagForAdmin = flagForAdmin;
+	}
+	
+	public boolean getFlagForAdmin() {
+		return this.flagForAdmin;
+	}
+}

@@ -73,6 +73,7 @@ public class ModReq extends JavaPlugin {
 	            Request req = new Request();
 	            req.setPlayerName(senderName);
 	            req.setRequest(req.toString());
+	            req.setRequestTime(System.currentTimeMillis());
 	            req.setRequestLocation(player.getLocation());
 	            req.setStatus(RequestStatus.OPEN);
 	            
@@ -87,7 +88,7 @@ public class ModReq extends JavaPlugin {
         	
         	if (args.length > 0 && !args[0].startsWith("p:")) {
         		try {
-                	requestId = Integer.parseInt(args[0].substring(3));
+                	requestId = Integer.parseInt(args[0]);
                 	page = 0;
                 	
                 } catch (NumberFormatException ex) {
@@ -254,6 +255,7 @@ public class ModReq extends JavaPlugin {
 		        
 		        if (req != null) {
 		        	req.setStatus(RequestStatus.CLOSED);
+		        	req.setCloseTime(System.currentTimeMillis());
 		            req.setCloseMessage(doneMessage);
 		            
 		            Player requestCreator = getServer().getPlayerExact(req.getPlayerName());
@@ -293,6 +295,24 @@ public class ModReq extends JavaPlugin {
 		            	
 		            	// Send Unclaimed Message to Mods.
 		            }
+	            }
+            }
+            catch (NumberFormatException ex) {
+                sender.sendMessage(ChatColor.RED + "[ModReq] Error: Expected a number for request.");
+            }
+        } else if (command.getName().equalsIgnoreCase("elevate")) {
+        	if (args.length == 0) {
+                return false;
+            }
+            int requestId = 0;
+            
+            try {
+            	requestId = Integer.parseInt(args[0]);
+            	
+	            Request req = reqTable.getRequest(requestId);
+	            if (req.getStatus() == RequestStatus.OPEN) {
+	            	req.setFlagForAdmin(true);
+	            	reqTable.save(req);
 	            }
             }
             catch (NumberFormatException ex) {
