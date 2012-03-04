@@ -1,0 +1,40 @@
+name: ModReq
+version: ${project.version}
+description: ${project.description}
+
+authors: [Travis Watkins, Deaygo Jarkko]
+website: ${project.url}
+
+main: nu.nerd.modreq.ModReq
+
+
+commands:
+  modreq:
+    description: Make a request
+    permission: modreq.request
+    usage: |
+           /<command> request: Make a request to the moderators
+  check:
+    description: Check request queue
+    permission: modreq.check
+    usage: |
+           /<command> [p:#|#]: Check request queue or a specific request
+
+permissions:
+  modreq:
+    description: Allow a player full access to request system
+    children:
+      modreq.mod:
+        description: Allow a player to manage requests
+        children:
+          modreq.check:
+            description: Allow a player to check the request queue
+          modreq.claim:
+            description: Allow a player to claim a request
+          modreq.done:
+            description: Allow a player to close a request
+          modreq.teleport:
+            description: Allow a player to teleport to the location a request was made
+  modreq.request:
+    description: Allow a player to submit a request
+    default: true
