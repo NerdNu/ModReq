@@ -5,9 +5,11 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class ModReq extends JavaPlugin {
+    ModReqListener listener = new ModReqListener(this);
 
     @Override
     public void onEnable() {
+        getServer().getPluginManager().registerEvents(listener, this);
         // setup persistence stuff here
     }
 
