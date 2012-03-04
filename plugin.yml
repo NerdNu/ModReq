@@ -16,9 +16,35 @@ commands:
            /<command> request: Make a request to the moderators
   check:
     description: Check request queue
-    permission: modreq.check
     usage: |
-           /<command> [p:#|#]: Check request queue or a specific request
+           /<command> <p:#|#>: Check request queue or a specific request
+  tp-id:
+    description: Teleport to a request
+    permission: modreq.teleport
+    usage: |
+           /<command> [#]: Teleport to a request
+    aliases: [tpid]
+  claim:
+    description: Claim a request
+    permission: modreq.claim
+    usage: |
+           /<command> [#]: Claim a request
+  unclaim:
+    description: Remove your claim from a request
+    permission: modreq.claim
+    usage: |
+           /<command> [#]: Unclaim a request
+  done:
+    description: Mark a request as completed
+    usage: |
+           /<command> <#> [message]: Close a request with an optional message
+    aliases: [complete]
+  reopen:
+    description: Reopen a closed request
+    permission: modreq.done
+    usage: |
+           /<command> <#>: Reopen closed request
+
 
 permissions:
   modreq:
