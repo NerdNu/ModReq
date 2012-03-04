@@ -10,7 +10,6 @@ import nu.nerd.modreq.database.Request;
 import nu.nerd.modreq.database.Request.RequestStatus;
 import nu.nerd.modreq.database.RequestTable;
 
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -19,6 +18,7 @@ import org.bukkit.permissions.Permissible;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class ModReq extends JavaPlugin {
+    ModReqListener listener = new ModReqListener(this);
 
 	RequestTable reqTable;
 	
@@ -26,6 +26,7 @@ public class ModReq extends JavaPlugin {
     public void onEnable() {
     	setupDatabase();
     	reqTable = new RequestTable(this);
+        getServer().getPluginManager().registerEvents(listener, this);
     }
 
     @Override
