@@ -289,7 +289,9 @@ public class ModReq extends JavaPlugin {
 		            		requestCreator.sendMessage(ChatColor.GREEN + message);
 		            	}
 		            	else {
-		            		messageMods(ChatColor.GREEN + String.format("[ModReq] Request #%d no longer needs to be handled", requestId));
+		            		if (!sender.hasPermission("modreq.done")) {
+		            			messageMods(ChatColor.GREEN + String.format("[ModReq] Request #%d no longer needs to be handled", requestId));
+		            		}
 		            	}
 		            	req.setCloseSeenByUser(true);
 		            }
@@ -337,6 +339,7 @@ public class ModReq extends JavaPlugin {
 	            Request req = reqTable.getRequest(requestId);
 	            if (req.getStatus() == RequestStatus.OPEN) {
 	            	req.setFlagForAdmin(true);
+	            	messageMods(String.format("%s[ModReq] Request #%d has been flagged for admin.", ChatColor.GREEN, req.getId()));
 	            	reqTable.save(req);
 	            }
             }
@@ -403,7 +406,7 @@ public class ModReq extends JavaPlugin {
 				onlineStatus = ChatColor.GREEN;
 			}
 			try {
-				messages.add(String.format("%s#%d. %s by %s%s%s - %s%s", ChatColor.GOLD, r.getId(), timestampToDateString(r.getRequestTime()), onlineStatus, r.getPlayerName(), ChatColor.GOLD, ChatColor.GRAY, message));
+				messages.add(String.format("%s#%d.%s %s by %s%s%s - %s%s", ChatColor.GOLD, r.getId(), ((r.isFlagForAdmin())?(ChatColor.AQUA + " [ADMIN]" + ChatColor.GOLD):""), timestampToDateString(r.getRequestTime()), onlineStatus, r.getPlayerName(), ChatColor.GOLD, ChatColor.GRAY, message));
 			}
 			catch (Exception ex) {
 				ex.printStackTrace();
