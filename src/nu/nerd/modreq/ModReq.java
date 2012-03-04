@@ -1,6 +1,7 @@
 package nu.nerd.modreq;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 
@@ -16,6 +17,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permissible;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import com.avaje.ebean.PagingList;
 
 public class ModReq extends JavaPlugin {
     ModReqListener listener = new ModReqListener(this);
@@ -68,26 +71,81 @@ public class ModReq extends JavaPlugin {
             if (sender instanceof Player) {
             	Player player = (Player)sender;
 	            Request req = new Request();
-	            req.setPlayerName(sender.getName());
+	            req.setPlayerName(senderName);
 	            req.setRequest(req.toString());
 	            req.setRequestLocation(player.getLocation());
 	            req.setStatus(RequestStatus.OPEN);
             }
         }
         else if (command.getName().equalsIgnoreCase("check")) {
+        	int page = 1;
+        	int requestId = 0;
+        	int totalRequests = 0;
+        	String limitName = null;
+        	
+        	if (args.length > 0 && !args[0].startsWith("p:")) {
+        		try {
+                	requestId = Integer.parseInt(args[0].substring(3));
+                	page = 0;
+                	
+                } catch (NumberFormatException ex) {
+                	requestId = -1;
+                }
+        	}
+        	
             if (sender.hasPermission("modreq.check")) {
+            	
                 if (args.length == 0) {
-                    // get page 1
+                    page = 0;
                 }
                 else if (args[0].startsWith("p:")) {
-                    // get a different page
-                }
-                else {
-                    // check a specific request
+                    try {
+                    	page = Integer.parseInt(args[0].substring(3));
+                    	
+                    } catch (NumberFormatException ex) {
+                    	page = -1;
+                    }
                 }
             }
             else {
-                // only show their own requests
+                limitName = senderName;
+            }
+            
+            List<Request> requests = new ArrayList<Request>();
+            
+            if (page > 0) {
+            	if (limitName != null) {
+            		requests.addAll(reqTable.getUserRequests(limitName));
+            		totalRequests = requests.size();
+            	} else {
+            		requests.addAll(reqTable.getRequestPage(page, 5, RequestStatus.OPEN));
+            		totalRequests = reqTable.getTotalOpenRequest();
+            	}
+            } else if (requestId > 0) {
+            	Request req = reqTable.getRequest(requestId);
+            	totalRequests = 1;
+            	if (limitName != null && req.getPlayerName().equalsIgnoreCase(limitName)) {
+            		requests.add(req);
+            	} else if (limitName == null) {
+            		requests.add(req);
+            	} else {
+            		totalRequests = 0;
+            	}
+            }
+            
+            if (totalRequests == 0) {
+            	if (limitName != null) {
+            		sender.sendMessage(ChatColor.GREEN + "You don't have any outstanding mod requests.");
+            	}
+            	else {
+            		sender.sendMessage(ChatColor.GREEN + "There are currently no open mod requests.");
+            	}
+            } else if (totalRequests == 1 && requestId > 0) {
+            	// Send single mod request details
+            } else if (totalRequests > 0) {
+            	// Send list of requests
+            } else {
+            	// there was an error.
             }
         }
         else if (command.getName().equalsIgnoreCase("tp-id")) {

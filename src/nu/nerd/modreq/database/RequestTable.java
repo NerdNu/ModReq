@@ -7,6 +7,7 @@ import com.avaje.ebean.PagingList;
 import com.avaje.ebean.Query;
 
 import nu.nerd.modreq.ModReq;
+import nu.nerd.modreq.database.Request.RequestStatus;
 
 public class RequestTable {
 
@@ -19,7 +20,7 @@ public class RequestTable {
 	public List<Request> getUserRequests(String username) {
 		List<Request> retVal = new ArrayList<Request>();
 		
-		Query<Request> query = plugin.getDatabase().find(Request.class).where().ieq("playerName", username).eq("status", 1).query();
+		Query<Request> query = plugin.getDatabase().find(Request.class).where().ieq("playerName", username).eq("status", RequestStatus.OPEN).query();
 		
 		if (query != null) {
 			retVal.addAll(query.findList());
@@ -39,13 +40,23 @@ public class RequestTable {
 		return retVal;
 	}
 	
-	public PagingList<Request> getRequestPager(int perPage, int status) {
-		PagingList<Request> retVal = null;
-		
-		Query<Request> query = plugin.getDatabase().find(Request.class).where().eq("status", Request.RequestStatus.OPEN).query();
+	public int getTotalOpenRequest() {
+		int retVal = 0;
+		Query<Request> query = plugin.getDatabase().find(Request.class).where().eq("status", RequestStatus.OPEN).query();
 		
 		if (query != null) {
-			retVal = query.findPagingList(perPage);
+			retVal = query.findRowCount();
+		}
+		
+		return retVal;
+	}
+	
+	public List<Request> getRequestPage(int page, int perPage, RequestStatus status) {
+		List<Request> retVal = new ArrayList<Request>();
+		Query<Request> query = plugin.getDatabase().find(Request.class).where().eq("status", status).query();
+		
+		if (query != null) {
+			retVal.addAll(query.findPagingList(perPage).getPage(page).getList());
 		}
 		
 		return retVal;
