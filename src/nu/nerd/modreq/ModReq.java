@@ -74,17 +74,22 @@ public class ModReq extends JavaPlugin {
             
             if (sender instanceof Player) {
                 Player player = (Player)sender;
-                Request req = new Request();
-                req.setPlayerName(senderName);
-                req.setRequest(request.toString());
-                req.setRequestTime(System.currentTimeMillis());
-                String location = String.format("%s,%f,%f,%f", player.getWorld().getName(), player.getLocation().getX(), player.getLocation().getY(), player.getLocation().getZ());
-                req.setRequestLocation(location);
-                req.setStatus(RequestStatus.OPEN);
                 
-                reqTable.save(req);
-                
-                messageMods(ChatColor.GREEN + "New request. Type /check for more");
+                if (reqTable.getNumRequestFromUser(senderName) <= 5) {
+                    Request req = new Request();
+                    req.setPlayerName(senderName);
+                    req.setRequest(request.toString());
+                    req.setRequestTime(System.currentTimeMillis());
+                    String location = String.format("%s,%f,%f,%f", player.getWorld().getName(), player.getLocation().getX(), player.getLocation().getY(), player.getLocation().getZ());
+                    req.setRequestLocation(location);
+                    req.setStatus(RequestStatus.OPEN);
+
+                    reqTable.save(req);
+
+                    messageMods(ChatColor.GREEN + "New request. Type /check for more");
+                } else {
+                    sender.sendMessage(ChatColor.RED + "You already have 5 open requests, please wait for them to be completed.");
+                }
             }
         }
         else if (command.getName().equalsIgnoreCase("check")) {
@@ -422,6 +427,8 @@ public class ModReq extends JavaPlugin {
                 ex.printStackTrace();
             }
         }
+        
+        messages.add(String.format("Page %d of %d", page, Math.ceil(totalRequests / 5.0)));
         
         sender.sendMessage(messages.toArray(new String[1]));
     }
