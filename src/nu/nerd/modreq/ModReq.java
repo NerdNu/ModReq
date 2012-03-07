@@ -170,7 +170,11 @@ public class ModReq extends JavaPlugin {
             } else if (totalRequests == 1 && requestId > 0) {
                 messageRequestToPlayer(sender, requests.get(0));
             } else if (totalRequests > 0) {
-                messageRequestListToPlayer(sender, requests, page, totalRequests);
+                boolean showPage = true;
+                if (limitName != null) {
+                    showPage = false;
+                }
+                messageRequestListToPlayer(sender, requests, page, totalRequests, showPage);
             } else {
                 // there was an error.
             }
@@ -405,7 +409,7 @@ public class ModReq extends JavaPlugin {
         sender.sendMessage(messages.toArray(new String[1]));
     }
     
-    private void messageRequestListToPlayer(CommandSender sender, List<Request> reqs, int page, int totalRequests) {
+    private void messageRequestListToPlayer(CommandSender sender, List<Request> reqs, int page, int totalRequests, boolean showPage) {
         List<String> messages = new ArrayList<String>();
         
         messages.add(String.format("%s---- %d Mod Requests ----", ChatColor.AQUA, totalRequests));
@@ -428,7 +432,9 @@ public class ModReq extends JavaPlugin {
             }
         }
         
-        messages.add(String.format("Page %d of %d", page, (int)Math.ceil(totalRequests / 5.0)));
+        if (showPage) {
+            messages.add(String.format("%s---- Page %d of %d ----", ChatColor.AQUA, page, (int)Math.ceil(totalRequests / 5.0)));
+        }
         
         sender.sendMessage(messages.toArray(new String[1]));
     }
