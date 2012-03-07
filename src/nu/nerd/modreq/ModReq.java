@@ -161,21 +161,20 @@ public class ModReq extends JavaPlugin {
                     }
                 }
                 else {
-                    if (page > 0) {
-                        sender.sendMessage(ChatColor.GREEN + "There are no results for that page.");
-                    }
-                    else {
-                        sender.sendMessage(ChatColor.GREEN + "There are currently no open mod requests.");
-                    }
+                    sender.sendMessage(ChatColor.GREEN + "There are currently no open mod requests.");
                 }
             } else if (totalRequests == 1 && requestId > 0) {
                 messageRequestToPlayer(sender, requests.get(0));
             } else if (totalRequests > 0) {
-                boolean showPage = true;
-                if (limitName != null) {
-                    showPage = false;
+                if (page > 1 && requests.size() == 0) {
+                    sender.sendMessage(ChatColor.RED + "There are no requests on that page.");
+                } else {
+                    boolean showPage = true;
+                    if (limitName != null) {
+                        showPage = false;
+                    }
+                    messageRequestListToPlayer(sender, requests, page, totalRequests, showPage);
                 }
-                messageRequestListToPlayer(sender, requests, page, totalRequests, showPage);
             } else {
                 // there was an error.
             }
