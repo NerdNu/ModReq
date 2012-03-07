@@ -428,7 +428,7 @@ public class ModReq extends JavaPlugin {
             }
         }
         
-        messages.add(String.format("Page %d of %d", page, Math.ceil(totalRequests / 5.0)));
+        messages.add(String.format("Page %d of %d", page, (int)Math.ceil(totalRequests / 5.0)));
         
         sender.sendMessage(messages.toArray(new String[1]));
     }
