@@ -87,6 +87,7 @@ public class ModReq extends JavaPlugin {
                     reqTable.save(req);
 
                     messageMods(ChatColor.GREEN + "New request. Type /check for more");
+                    sender.sendMessage(ChatColor.GREEN + "Request has been filed. Please be patient for a moderator to complete your request.");
                 } else {
                     sender.sendMessage(ChatColor.RED + "You already have 5 open requests, please wait for them to be completed.");
                 }
@@ -216,7 +217,7 @@ public class ModReq extends JavaPlugin {
                         req.setAssignedMod(senderName);
                         reqTable.save(req);
                         
-                        messageMods(String.format("%s[ModReq] %s is now handling request #%d", ChatColor.GREEN, senderName, requestId));
+                        messageMods(String.format("%s%s is now handling request #%d", ChatColor.GREEN, senderName, requestId));
                     }
                 }
             }
@@ -241,7 +242,7 @@ public class ModReq extends JavaPlugin {
                         req.setAssignedMod(null);
                         reqTable.save(req);
                         
-                        messageMods(String.format("%s[ModReq] %s is no longer handling request #%d", ChatColor.GREEN, senderName, requestId));
+                        messageMods(String.format("%s%s is no longer handling request #%d", ChatColor.GREEN, senderName, requestId));
                     }
                 }
             }
@@ -274,7 +275,7 @@ public class ModReq extends JavaPlugin {
                 
                 if (sender.hasPermission("modreq.done")) {
                     String msg = "";
-                    msg = String.format("%s[ModReq] Request #%d has been completed by %s", ChatColor.GREEN, requestId, senderName);
+                    msg = String.format("%sRequest #%d has been completed by %s", ChatColor.GREEN, requestId, senderName);
                     messageMods(msg);
                     
                     if (doneMessage != null && !doneMessage.isEmpty()) {
@@ -309,7 +310,8 @@ public class ModReq extends JavaPlugin {
                         }
                         else {
                             if (!sender.hasPermission("modreq.done")) {
-                                messageMods(ChatColor.GREEN + String.format("[ModReq] Request #%d no longer needs to be handled", requestId));
+                                messageMods(ChatColor.GREEN + String.format("Request #%d no longer needs to be handled", requestId));
+                                sender.sendMessage(ChatColor.GREEN + String.format("Request #%d has been closed by you.", requestId));
                             }
                         }
                         req.setCloseSeenByUser(true);
