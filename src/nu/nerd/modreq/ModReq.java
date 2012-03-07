@@ -75,7 +75,7 @@ public class ModReq extends JavaPlugin {
             if (sender instanceof Player) {
                 Player player = (Player)sender;
                 
-                if (reqTable.getNumRequestFromUser(senderName) <= 5) {
+                if (reqTable.getNumRequestFromUser(senderName) < 5) {
                     Request req = new Request();
                     req.setPlayerName(senderName);
                     req.setRequest(request.toString());
