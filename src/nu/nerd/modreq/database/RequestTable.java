@@ -3,6 +3,7 @@ package nu.nerd.modreq.database;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.avaje.ebean.Expr;
 import com.avaje.ebean.PagingList;
 import com.avaje.ebean.Query;
 
@@ -43,7 +44,7 @@ public class RequestTable {
 	
 	public int getNumRequestFromUser(String username) {
 		int retVal = 0;
-		Query<Request> query = plugin.getDatabase().find(Request.class).where().ieq("playerName", username).query();
+		Query<Request> query = plugin.getDatabase().find(Request.class).where().ieq("playerName", username).not(Expr.eq("status", RequestStatus.CLOSED)).query();
 		
 		if (query != null) {
 			retVal = query.findRowCount();

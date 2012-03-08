@@ -261,7 +261,7 @@ public class ModReq extends JavaPlugin {
                 
                 String doneMessage = null;
                 
-                if (args.length > 2) {
+                if (args.length > 1) {
                     StringBuilder doneMessageBuilder = new StringBuilder(args[1]);
                     for (int i = 2; i < args.length; i++) {
                         doneMessageBuilder.append(" ").append(args[i]);
@@ -291,31 +291,36 @@ public class ModReq extends JavaPlugin {
                 }
                 
                 if (req != null) {
-                    req.setStatus(RequestStatus.CLOSED);
-                    req.setCloseTime(System.currentTimeMillis());
-                    req.setCloseMessage(doneMessage);
-                    req.setAssignedMod(senderName);
-                    
-                    Player requestCreator = getServer().getPlayerExact(req.getPlayerName());
-                    if (requestCreator != null) {
-                        if (!requestCreator.getName().equalsIgnoreCase(senderName)) {
-                            String message = "";
-                            if (doneMessage != null && !doneMessage.isEmpty()) {
-                                message = String.format("%s completed your request - %s%s", senderName, ChatColor.GRAY, doneMessage);
-                            } else {
-                                message = String.format("%s completed your request", senderName);
-                            }
-                            requestCreator.sendMessage(ChatColor.GREEN + message);
-                        }
-                        else {
-                            if (!sender.hasPermission("modreq.done")) {
-                                messageMods(ChatColor.GREEN + String.format("Request #%d no longer needs to be handled", requestId));
-                                sender.sendMessage(ChatColor.GREEN + String.format("Request #%d has been closed by you.", requestId));
-                            }
-                        }
-                        req.setCloseSeenByUser(true);
-                    }
-                    reqTable.save(req);
+                	if (req.getStatus() == RequestStatus.CLOSED) {
+                		sender.sendMessage(ChatColor.RED + "Request Already Closed.");
+                	}
+                	else {
+	                    req.setStatus(RequestStatus.CLOSED);
+	                    req.setCloseTime(System.currentTimeMillis());
+	                    req.setCloseMessage(doneMessage);
+	                    req.setAssignedMod(senderName);
+	                    
+	                    Player requestCreator = getServer().getPlayerExact(req.getPlayerName());
+	                    if (requestCreator != null) {
+	                        if (!requestCreator.getName().equalsIgnoreCase(senderName)) {
+	                            String message = "";
+	                            if (doneMessage != null && !doneMessage.isEmpty()) {
+	                                message = String.format("%s completed your request - %s%s", senderName, ChatColor.GRAY, doneMessage);
+	                            } else {
+	                                message = String.format("%s completed your request", senderName);
+	                            }
+	                            requestCreator.sendMessage(ChatColor.GREEN + message);
+	                        }
+	                        else {
+	                            if (!sender.hasPermission("modreq.done")) {
+	                                messageMods(ChatColor.GREEN + String.format("Request #%d no longer needs to be handled", requestId));
+	                                sender.sendMessage(ChatColor.GREEN + String.format("Request #%d has been closed by you.", requestId));
+	                            }
+	                        }
+	                        req.setCloseSeenByUser(true);
+	                    }
+	                    reqTable.save(req);
+                	}
                 }
             }
             catch (NumberFormatException ex) {
@@ -418,7 +423,7 @@ public class ModReq extends JavaPlugin {
             ChatColor onlineStatus = ChatColor.RED;
             String message = "";
             if (r.getRequest().length() > 20) {
-                message = r.getRequest().substring(1, 17) + "...";
+                message = r.getRequest().substring(0, 17) + "...";
             } else {
                 message = r.getRequest();
             }
