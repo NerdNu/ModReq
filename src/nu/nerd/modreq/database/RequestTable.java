@@ -64,9 +64,9 @@ public class RequestTable {
 		return retVal;
 	}
 	
-	public List<Request> getRequestPage(int page, int perPage, RequestStatus status) {
+	public List<Request> getRequestPage(int page, int perPage, RequestStatus ... statuses) {
 		List<Request> retVal = new ArrayList<Request>();
-		Query<Request> query = plugin.getDatabase().find(Request.class).where().eq("status", status).query();
+		Query<Request> query = plugin.getDatabase().find(Request.class).where().in("status", statuses).query();
 		
 		if (query != null) {
 			retVal.addAll(query.findPagingList(perPage).getPage(page).getList());

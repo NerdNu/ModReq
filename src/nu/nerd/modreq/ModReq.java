@@ -136,7 +136,7 @@ public class ModReq extends JavaPlugin {
                     requests.addAll(reqTable.getUserRequests(limitName));
                     totalRequests = requests.size();
                 } else {
-                    requests.addAll(reqTable.getRequestPage(page - 1, 5, RequestStatus.OPEN));
+                    requests.addAll(reqTable.getRequestPage(page - 1, 5, RequestStatus.OPEN, RequestStatus.CLAIMED));
                     totalRequests = reqTable.getTotalOpenRequest();
                 }
             } else if (requestId > 0) {
@@ -408,7 +408,7 @@ public class ModReq extends JavaPlugin {
         Location loc = stringToLocation(req.getRequestLocation());
         String location = String.format("%s, %d, %d, %d", loc.getWorld().getName(), Math.round(loc.getX()), Math.round(loc.getY()), Math.round(loc.getZ()));
         
-        messages.add(String.format("%sMod Request #%d - %s%s", ChatColor.AQUA, req.getId(), ChatColor.YELLOW, req.getStatus().toString() ));
+        messages.add(String.format("%sMod Request #%d - %s%s%s", ChatColor.AQUA, req.getId(), ChatColor.YELLOW, req.getStatus().toString(), ((req.getStatus() == RequestStatus.CLAIMED)?" by " + req.getAssignedMod():"")));
         messages.add(String.format("%sFiled by %s%s%s at %s%s%s at %s%s", ChatColor.YELLOW, onlineStatus, req.getPlayerName(), ChatColor.YELLOW, ChatColor.GREEN, timestampToDateString(req.getRequestTime()), ChatColor.YELLOW, ChatColor.GREEN, location));
         messages.add(String.format("%s%s", ChatColor.GRAY, req.getRequest()));
         
@@ -431,7 +431,7 @@ public class ModReq extends JavaPlugin {
                 onlineStatus = ChatColor.GREEN;
             }
             try {
-                messages.add(String.format("%s#%d.%s %s by %s%s%s - %s%s", ChatColor.GOLD, r.getId(), ((r.isFlagForAdmin())?(ChatColor.AQUA + " [ADMIN]" + ChatColor.GOLD):""), timestampToDateString(r.getRequestTime()), onlineStatus, r.getPlayerName(), ChatColor.GOLD, ChatColor.GRAY, message));
+                messages.add(String.format("%s#%d.%s[%s%s] %s by %s%s%s - %s%s", ChatColor.GOLD, r.getId(), ((r.isFlagForAdmin())?(ChatColor.AQUA + " [ADMIN]" + ChatColor.GOLD):""), r.getStatus().toString(), ((r.getStatus() == RequestStatus.CLAIMED)?" by " + r.getAssignedMod():""), timestampToDateString(r.getRequestTime()), onlineStatus, r.getPlayerName(), ChatColor.GOLD, ChatColor.GRAY, message));
             }
             catch (Exception ex) {
                 ex.printStackTrace();
