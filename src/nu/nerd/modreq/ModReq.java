@@ -272,29 +272,29 @@ public class ModReq extends JavaPlugin {
                 
                 Request req = reqTable.getRequest(requestId);
                 
-                if (sender.hasPermission("modreq.done")) {
-                    String msg = "";
-                    msg = String.format("%sRequest #%d has been completed by %s", ChatColor.GREEN, requestId, senderName);
-                    messageMods(msg);
-                    
-                    if (doneMessage != null && !doneMessage.isEmpty()) {
-                        msg = String.format("Close Message - %s%s", ChatColor.GRAY, doneMessage);
-                        messageMods(msg);
-                    }
+                if (req != null && req.getStatus() == RequestStatus.CLOSED) {
+                	sender.sendMessage(ChatColor.RED + "Request Already Closed.");
                 }
                 else {
-                    if (!req.getPlayerName().equalsIgnoreCase(senderName)) {
-                        req = null;
-                        
-                        sender.sendMessage(String.format("%s[ModReq] Error, you can only close your own requests.", ChatColor.RED));
-                    }
-                }
-                
-                if (req != null) {
-                	if (req.getStatus() == RequestStatus.CLOSED) {
-                		sender.sendMessage(ChatColor.RED + "Request Already Closed.");
-                	}
-                	else {
+                	if (sender.hasPermission("modreq.done") && req != null) {
+	                    String msg = "";
+	                    msg = String.format("%sRequest #%d has been completed by %s", ChatColor.GREEN, requestId, senderName);
+	                    messageMods(msg);
+	                    
+	                    if (doneMessage != null && !doneMessage.isEmpty()) {
+	                        msg = String.format("Close Message - %s%s", ChatColor.GRAY, doneMessage);
+	                        messageMods(msg);
+	                    }
+	                }
+	                else {
+	                    if (!req.getPlayerName().equalsIgnoreCase(senderName)) {
+	                        req = null;
+	                        
+	                        sender.sendMessage(String.format("%s[ModReq] Error, you can only close your own requests.", ChatColor.RED));
+	                    }
+	                }
+	                
+	                if (req != null) {
 	                    req.setStatus(RequestStatus.CLOSED);
 	                    req.setCloseTime(System.currentTimeMillis());
 	                    req.setCloseMessage(doneMessage);
@@ -320,7 +320,7 @@ public class ModReq extends JavaPlugin {
 	                        req.setCloseSeenByUser(true);
 	                    }
 	                    reqTable.save(req);
-                	}
+	                }
                 }
             }
             catch (NumberFormatException ex) {
