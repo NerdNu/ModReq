@@ -3,6 +3,7 @@ package nu.nerd.modreq;
 import java.util.List;
 
 import nu.nerd.modreq.database.Request;
+import nu.nerd.modreq.database.Request.RequestStatus;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -21,7 +22,7 @@ class ModReqListener implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onPlayerJoin(PlayerJoinEvent event) {
         if (event.getPlayer().hasPermission("modreq.check")) {
-            int open = plugin.reqTable.getTotalOpenRequest();
+            int open = plugin.reqTable.getTotalRequest(RequestStatus.OPEN, RequestStatus.CLAIMED);
             event.getPlayer().sendMessage(ChatColor.GREEN + "There are " + open + " open mod requests. Type /check to see them.");
         }
         

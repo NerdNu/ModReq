@@ -137,7 +137,7 @@ public class ModReq extends JavaPlugin {
                     totalRequests = requests.size();
                 } else {
                     requests.addAll(reqTable.getRequestPage(page - 1, 5, RequestStatus.OPEN, RequestStatus.CLAIMED));
-                    totalRequests = reqTable.getTotalOpenRequest();
+                    totalRequests = reqTable.getTotalRequest(RequestStatus.OPEN, RequestStatus.CLAIMED);
                 }
             } else if (requestId > 0) {
                 Request req = reqTable.getRequest(requestId);

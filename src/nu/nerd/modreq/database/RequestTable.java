@@ -53,9 +53,9 @@ public class RequestTable {
 		return retVal;
 	}
 	
-	public int getTotalOpenRequest() {
+	public int getTotalRequest(RequestStatus ... statuses) {
 		int retVal = 0;
-		Query<Request> query = plugin.getDatabase().find(Request.class).where().eq("status", RequestStatus.OPEN).query();
+		Query<Request> query = plugin.getDatabase().find(Request.class).where().in("status", statuses).query();
 		
 		if (query != null) {
 			retVal = query.findRowCount();
