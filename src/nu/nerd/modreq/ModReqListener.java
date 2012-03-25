@@ -31,7 +31,7 @@ class ModReqListener implements Listener {
         for (Request req : missedClosed) {
         	String doneMessage = req.getCloseMessage();
     		String message = "";
-    		if (doneMessage != null && !doneMessage.isEmpty()) {
+    		if (doneMessage != null && doneMessage.length() != 0) {
     			message = String.format("%s completed your request - %s%s", req.getAssignedMod(), ChatColor.GRAY, doneMessage);
     		} else {
     			message = String.format("%s completed your request", req.getAssignedMod());
