@@ -281,7 +281,7 @@ public class ModReq extends JavaPlugin {
 	                    msg = String.format("%sRequest #%d has been completed by %s", ChatColor.GREEN, requestId, senderName);
 	                    messageMods(msg);
 	                    
-	                    if (doneMessage != null && !doneMessage.isEmpty()) {
+	                    if (doneMessage != null && doneMessage.length() != 0) {
 	                        msg = String.format("Close Message - %s%s", ChatColor.GRAY, doneMessage);
 	                        messageMods(msg);
 	                    }
@@ -304,7 +304,7 @@ public class ModReq extends JavaPlugin {
 	                    if (requestCreator != null) {
 	                        if (!requestCreator.getName().equalsIgnoreCase(senderName)) {
 	                            String message = "";
-	                            if (doneMessage != null && !doneMessage.isEmpty()) {
+	                            if (doneMessage != null && doneMessage.length() != 0) {
 	                                message = String.format("%s completed your request - %s%s", senderName, ChatColor.GRAY, doneMessage);
 	                            } else {
 	                                message = String.format("%s completed your request", senderName);
