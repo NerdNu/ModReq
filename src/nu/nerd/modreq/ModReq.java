@@ -345,7 +345,7 @@ public class ModReq extends JavaPlugin {
                         req.setCloseSeenByUser(false);
                         reqTable.save(req);
                         
-                        messageMods(ChatColor.GREEN + String.format("[ModReq] Request #%d is no longer claimed.", requestId));
+                        messageMods(ChatColor.GREEN + String.format("[ModReq] Request #%d has been reopened.", requestId));
                     }
                 }
             }
