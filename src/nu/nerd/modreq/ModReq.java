@@ -345,7 +345,7 @@ public class ModReq extends JavaPlugin {
                         req.setCloseSeenByUser(false);
                         reqTable.save(req);
                         
-                        messageMods(ChatColor.GREEN + String.format("[ModReq] Request #%d is no longer claimed.", requestId));
+                        messageMods(ChatColor.GREEN + String.format("[ModReq] Request #%d has been reopened.", requestId));
                     }
                 }
             }
@@ -431,7 +431,7 @@ public class ModReq extends JavaPlugin {
                 onlineStatus = ChatColor.GREEN;
             }
             try {
-                messages.add(String.format("%s#%d.%s [%s%s%s] %s by %s%s%s - %s%s", ChatColor.GOLD, r.getId(), ((r.isFlagForAdmin())?(ChatColor.AQUA + " [ADMIN]" + ChatColor.GOLD):""), ChatColor.GREEN ,((r.getStatus() == RequestStatus.CLAIMED)?r.getAssignedMod():r.getStatus().toString()), ChatColor.GOLD, timestampToDateString(r.getRequestTime()), onlineStatus, r.getPlayerName(), ChatColor.GOLD, ChatColor.GRAY, message));
+                messages.add(String.format("%s#%d.%s [%s%s%s] %s by %s%s%s - %s%s", ChatColor.GOLD, r.getId(), ((r.isFlagForAdmin())?(ChatColor.AQUA + " [ADMIN]" + ChatColor.GOLD):""), ChatColor.GREEN ,((r.getStatus() == RequestStatus.CLAIMED)?ChatColor.YELLOW + r.getAssignedMod():r.getStatus().toString()), ChatColor.GOLD, timestampToDateString(r.getRequestTime()), onlineStatus, r.getPlayerName(), ChatColor.GOLD, ChatColor.GRAY, message));
             }
             catch (Exception ex) {
                 ex.printStackTrace();
