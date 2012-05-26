@@ -50,7 +50,11 @@ commands:
     permission: modreq.mod
     usage: |
            /<command> <#>: Flag a request for an admin.
-
+  mr-reset:
+    description: Reset the modreq database.
+    permissions: modreq.cleardb
+    usage: |
+           /<command>: Reset the modreq database.
 
 permissions:
   modreq:
@@ -67,6 +71,8 @@ permissions:
             description: Allow a player to close a request
           modreq.teleport:
             description: Allow a player to teleport to the location a request was made
+  modreq.cleardb:
+    description: Allow a player to clear the database.
   modreq.request:
     description: Allow a player to submit a request
     default: true

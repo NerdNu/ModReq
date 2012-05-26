@@ -1,5 +1,9 @@
 package nu.nerd.modreq;
 
+import com.avaje.ebean.CallableSql;
+import com.avaje.ebean.SqlQuery;
+import com.avaje.ebean.SqlUpdate;
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -39,13 +43,38 @@ public class ModReq extends JavaPlugin {
         // tear down
     }
     
-    public void setupDatabase() {
-
+    public boolean setupDatabase() {
         try {
             getDatabase().find(Request.class).findRowCount();
         } catch (PersistenceException ex) {
             getLogger().log(Level.INFO, "First run, initializing database.");
             installDDL();
+            return true;
+        }
+        
+        return false;
+    }
+    
+    public void resetDatabase() {
+        List<Request> reqs = reqTable.getRequestPage(0, 1000, RequestStatus.OPEN, RequestStatus.CLAIMED);
+        
+        removeDDL();
+        
+        if (setupDatabase()) {
+        
+            for (Request r : reqs) {
+                Request req = new Request();
+                req.setPlayerName(r.getPlayerName());
+                req.setRequest(r.getRequest());
+                req.setRequestTime(r.getRequestTime());
+                req.setRequestLocation(r.getRequestLocation());
+                req.setStatus(r.getStatus());
+                if (r.getStatus() == RequestStatus.CLAIMED) {
+                    req.setAssignedMod(r.getAssignedMod());
+                }
+
+                reqTable.save(req);
+            }
         }
     }
     
@@ -370,6 +399,13 @@ public class ModReq extends JavaPlugin {
             }
             catch (NumberFormatException ex) {
                 sender.sendMessage(ChatColor.RED + "[ModReq] Error: Expected a number for request.");
+            }
+        } else if ( command.getName().equalsIgnoreCase("mr-reset")) {
+            try {
+                resetDatabase();
+                sender.sendMessage(ChatColor.GREEN + "[ModReq] Database has been reset.");
+            } catch (Exception ex) {
+                getLogger().log(Level.WARNING, "Failed to reset database", ex);
             }
         }
 
