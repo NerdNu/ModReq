@@ -72,6 +72,7 @@ public class ModReq extends JavaPlugin {
                 if (r.getStatus() == RequestStatus.CLAIMED) {
                     req.setAssignedMod(r.getAssignedMod());
                 }
+                req.setFlagForAdmin(r.isFlagForAdmin());
 
                 reqTable.save(req);
             }
