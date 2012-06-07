@@ -52,7 +52,7 @@ commands:
            /<command> <#>: Flag a request for an admin.
   mr-reset:
     description: Reset the modreq database.
-    permissions: modreq.cleardb
+    permission: modreq.cleardb
     usage: |
            /<command>: Reset the modreq database.
 
