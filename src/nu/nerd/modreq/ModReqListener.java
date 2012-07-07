@@ -23,7 +23,7 @@ class ModReqListener implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         if (event.getPlayer().hasPermission("modreq.check")) {
             int open = plugin.reqTable.getTotalRequest(RequestStatus.OPEN, RequestStatus.CLAIMED);
-            event.getPlayer().sendMessage(ChatColor.GREEN + "There are " + open + " open mod requests. Type /check to see them.");
+            event.getPlayer().sendMessage(String.format(plugin.config.MOD_ALERT_OPEN_REQUESTS, open));
         }
         
         List<Request> missedClosed = plugin.reqTable.getMissedClosedRequests(ChatColor.stripColor(event.getPlayer().getName()));
@@ -32,11 +32,11 @@ class ModReqListener implements Listener {
         	String doneMessage = req.getCloseMessage();
     		String message = "";
     		if (doneMessage != null && doneMessage.length() != 0) {
-    			message = String.format("%s completed your request - %s%s", req.getAssignedMod(), ChatColor.GRAY, doneMessage);
+    			message = String.format(plugin.config.PLAYER_REQUEST_COMPLETED_WITH_MESSAGE, req.getAssignedMod(), doneMessage);
     		} else {
-    			message = String.format("%s completed your request", req.getAssignedMod());
+    			message = String.format(plugin.config.PLAYER_REQUEST_COMPLETED, req.getAssignedMod());
     		}
-    		event.getPlayer().sendMessage(ChatColor.GREEN + message);
+    		event.getPlayer().sendMessage(message);
         	req.setCloseSeenByUser(true);
         	
         	plugin.reqTable.save(req);
