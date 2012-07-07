@@ -26,23 +26,34 @@ import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permissible;
 import org.bukkit.plugin.java.JavaPlugin;
 
-public class ModReq extends JavaPlugin {
+public class ModReq extends JavaPlugin 
+{
+    public final Configuration config = new Configuration(this);
+    
     ModReqListener listener = new ModReqListener(this);
 
     RequestTable reqTable;
-    
+
     @Override
     public void onEnable() {
         setupDatabase();
         reqTable = new RequestTable(this);
+        File config_file = new File(getDataFolder(), "config.yml");
+        if (!config_file.exists()) {
+            getConfig().options().copyDefaults(true);
+            saveConfig();
+        }
+        config.load();
         getServer().getPluginManager().registerEvents(listener, this);
+        getLogger().log(Level.INFO, getDescription().getName() + " " + getDescription().getVersion() + " enabled.");
     }
 
     @Override
     public void onDisable() {
         // tear down
+        getLogger().log(Level.INFO, getDescription().getName() + " " + getDescription().getVersion() + " disabled.");
     }
-    
+
     public boolean setupDatabase() {
         try {
             getDatabase().find(Request.class).findRowCount();
@@ -116,10 +127,10 @@ public class ModReq extends JavaPlugin {
 
                     reqTable.save(req);
 
-                    messageMods(ChatColor.GREEN + "New request. Type /check for more");
-                    sender.sendMessage(ChatColor.GREEN + "Request has been filed. Please be patient for a moderator to complete your request.");
+                    messageMods(config.MOD_ALERT_NEW_REQUEST);
+                    sender.sendMessage(config.PLAYER_MADE_NEW_REQUEST);
                 } else {
-                    sender.sendMessage(ChatColor.RED + "You already have 5 open requests, please wait for them to be completed.");
+                    sender.sendMessage(config.PLAYER_MAX_REQUESTS);
                 }
             }
         }
@@ -135,7 +146,7 @@ public class ModReq extends JavaPlugin {
                     page = 0;
                     
                 } catch (NumberFormatException ex) {
-                    sender.sendMessage(ChatColor.RED + "You must provide a number for requests.");
+                    sender.sendMessage(config.CHECK_INVALID_REQUEST_NUMBER);
                     return true;
                 }
             }
@@ -150,7 +161,7 @@ public class ModReq extends JavaPlugin {
                         page = Integer.parseInt(args[0].substring(2));
                         
                     } catch (NumberFormatException ex) {
-                        sender.sendMessage(ChatColor.RED + "You must provide a number for pages.");
+                        sender.sendMessage(config.CHECK_INVALID_PAGE_NUMBER);
                         return true;
                     }
                 }
@@ -184,20 +195,24 @@ public class ModReq extends JavaPlugin {
             if (totalRequests == 0) {
                 if (limitName != null) {
                     if (requestId > 0) {
-                        sender.sendMessage(ChatColor.GREEN + "Either that request doesn't exist, or you do not have permission to view it.");
+                        sender.sendMessage(config.CHECK_REQUEST_NOT_FOUND);
                     }
                     else {
-                        sender.sendMessage(ChatColor.GREEN + "You don't have any outstanding mod requests.");
+                        sender.sendMessage(config.PLAYER_CHECK_EMPTY);
                     }
                 }
                 else {
-                    sender.sendMessage(ChatColor.GREEN + "There are currently no open mod requests.");
+                    sender.sendMessage(config.MOD_CHECK_EMPTY);
                 }
             } else if (totalRequests == 1 && requestId > 0) {
-                messageRequestToPlayer(sender, requests.get(0));
+                if (requests.get(0) != null) {
+                    messageRequestToPlayer(sender, requests.get(0));
+                } else {
+                    sender.sendMessage(config.CHECK_REQUEST_NOT_FOUND);
+                }
             } else if (totalRequests > 0) {
                 if (page > 1 && requests.size() == 0) {
-                    sender.sendMessage(ChatColor.RED + "There are no requests on that page.");
+                    sender.sendMessage(config.CHECK_PAGE_EMPTY);
                 } else {
                     boolean showPage = true;
                     if (limitName != null) {
@@ -220,13 +235,13 @@ public class ModReq extends JavaPlugin {
                 if (sender instanceof Player) {
                     Player player = (Player)sender;
                     Request req = reqTable.getRequest(requestId);
-                    player.sendMessage(ChatColor.GREEN + "[ModReq] Teleporting you to request " + requestId);
+                    player.sendMessage(String.format(config.MOD_TELEPORTING, requestId));
                     Location loc = stringToLocation(req.getRequestLocation());
                     player.teleport(loc);
                 }
             }
             catch (NumberFormatException ex) {
-                sender.sendMessage(ChatColor.RED + "[ModReq] Error: Expected a number for request.");
+                sender.sendMessage(config.MOD_INVALID_REQUEST_NUMBER);
             }
         }
         else if (command.getName().equalsIgnoreCase("claim")) {
@@ -246,12 +261,12 @@ public class ModReq extends JavaPlugin {
                         req.setAssignedMod(senderName);
                         reqTable.save(req);
                         
-                        messageMods(String.format("%s%s is now handling request #%d", ChatColor.GREEN, senderName, requestId));
+                        messageMods(String.format(config.MOD_REQUEST_CLAIMED, senderName, requestId));
                     }
                 }
             }
             catch (NumberFormatException ex) {
-                sender.sendMessage(ChatColor.RED + "[ModReq] Error: Expected a number for request.");
+                sender.sendMessage(config.MOD_INVALID_REQUEST_NUMBER);
             }
         }
         else if (command.getName().equalsIgnoreCase("unclaim")) {
@@ -266,17 +281,19 @@ public class ModReq extends JavaPlugin {
                 if (sender instanceof Player) {
                     Player player = (Player)sender;
                     Request req = reqTable.getRequest(requestId);
-                    if (req.getAssignedMod().equalsIgnoreCase(senderName) && req.getStatus() == RequestStatus.CLAIMED) {
+                    if (req.getAssignedMod() != null &&
+                        req.getAssignedMod().equalsIgnoreCase(senderName) &&
+                        req.getStatus() == RequestStatus.CLAIMED) {
                         req.setStatus(RequestStatus.OPEN);
                         req.setAssignedMod(null);
                         reqTable.save(req);
                         
-                        messageMods(String.format("%s%s is no longer handling request #%d", ChatColor.GREEN, senderName, requestId));
+                        messageMods(String.format(config.MOD_REQUEST_UNCLAIMED, senderName, requestId));
                     }
                 }
             }
             catch (NumberFormatException ex) {
-                sender.sendMessage(ChatColor.RED + "[ModReq] Error: Expected a number for request.");
+                sender.sendMessage(config.MOD_INVALID_REQUEST_NUMBER);
             }
         }
         else if (command.getName().equalsIgnoreCase("done")) {
@@ -303,16 +320,16 @@ public class ModReq extends JavaPlugin {
                 Request req = reqTable.getRequest(requestId);
                 
                 if (req != null && req.getStatus() == RequestStatus.CLOSED) {
-                	sender.sendMessage(ChatColor.RED + "Request Already Closed.");
+                    sender.sendMessage(config.MOD_REQUEST_ALREADY_CLOSED);
                 }
                 else {
                 	if (sender.hasPermission("modreq.done") && req != null) {
 	                    String msg = "";
-	                    msg = String.format("%sRequest #%d has been completed by %s", ChatColor.GREEN, requestId, senderName);
+	                    msg = String.format(config.MOD_REQUEST_COMPLETED, requestId, senderName);
 	                    messageMods(msg);
 	                    
 	                    if (doneMessage != null && doneMessage.length() != 0) {
-	                        msg = String.format("Close Message - %s%s", ChatColor.GRAY, doneMessage);
+	                        msg = String.format(config.MOD_CLOSE_MESSAGE, doneMessage);
 	                        messageMods(msg);
 	                    }
 	                }
@@ -320,7 +337,7 @@ public class ModReq extends JavaPlugin {
 	                    if (!req.getPlayerName().equalsIgnoreCase(senderName)) {
 	                        req = null;
 	                        
-	                        sender.sendMessage(String.format("%s[ModReq] Error, you can only close your own requests.", ChatColor.RED));
+	                        sender.sendMessage(config.MOD_REQUEST_NOT_CLAIMED);
 	                    }
 	                }
 	                
@@ -335,16 +352,16 @@ public class ModReq extends JavaPlugin {
 	                        if (!requestCreator.getName().equalsIgnoreCase(senderName)) {
 	                            String message = "";
 	                            if (doneMessage != null && doneMessage.length() != 0) {
-	                                message = String.format("%s completed your request - %s%s", senderName, ChatColor.GRAY, doneMessage);
+	                                message = String.format(config.PLAYER_REQUEST_COMPLETED_WITH_MESSAGE, senderName, doneMessage);
 	                            } else {
-	                                message = String.format("%s completed your request", senderName);
+	                                message = String.format(config.PLAYER_REQUEST_COMPLETED, senderName);
 	                            }
-	                            requestCreator.sendMessage(ChatColor.GREEN + message);
+	                            requestCreator.sendMessage(message);
 	                        }
 	                        else {
 	                            if (!sender.hasPermission("modreq.done")) {
-	                                messageMods(ChatColor.GREEN + String.format("Request #%d no longer needs to be handled", requestId));
-	                                sender.sendMessage(ChatColor.GREEN + String.format("Request #%d has been closed by you.", requestId));
+	                                messageMods(String.format(config.MOD_ALERT_REQUEST_COMPLETED, requestId));
+	                                sender.sendMessage(String.format(config.MOD_REQUEST_CLOSED, requestId));
 	                            }
 	                        }
 	                        req.setCloseSeenByUser(true);
@@ -354,7 +371,7 @@ public class ModReq extends JavaPlugin {
                 }
             }
             catch (NumberFormatException ex) {
-                sender.sendMessage(ChatColor.RED + "[ModReq] Error: Expected a number for request.");
+                sender.sendMessage(config.MOD_INVALID_REQUEST_NUMBER);
             }
         }
         else if (command.getName().equalsIgnoreCase("reopen")) {
@@ -369,18 +386,21 @@ public class ModReq extends JavaPlugin {
                 if (sender instanceof Player) {
                     Player player = (Player)sender;
                     Request req = reqTable.getRequest(requestId);
-                    if ((req.getAssignedMod().equalsIgnoreCase(senderName) && req.getStatus() == RequestStatus.CLAIMED) || req.getStatus() == RequestStatus.CLOSED) {
+                    if ((req.getAssignedMod() != null &&
+                         req.getAssignedMod().equalsIgnoreCase(senderName) &&
+                         req.getStatus() == RequestStatus.CLAIMED) ||
+                        req.getStatus() == RequestStatus.CLOSED) {
                         req.setStatus(RequestStatus.OPEN);
                         req.setAssignedMod(null);
                         req.setCloseSeenByUser(false);
                         reqTable.save(req);
                         
-                        messageMods(ChatColor.GREEN + String.format("[ModReq] Request #%d is no longer claimed.", requestId));
+                        messageMods(String.format(config.MOD_ALERT_REQUEST_REOPENED, requestId));
                     }
                 }
             }
             catch (NumberFormatException ex) {
-                sender.sendMessage(ChatColor.RED + "[ModReq] Error: Expected a number for request.");
+                sender.sendMessage(config.MOD_INVALID_REQUEST_NUMBER);
             }
         } else if (command.getName().equalsIgnoreCase("elevate")) {
             if (args.length == 0) {
@@ -394,17 +414,19 @@ public class ModReq extends JavaPlugin {
                 Request req = reqTable.getRequest(requestId);
                 if (req.getStatus() == RequestStatus.OPEN) {
                     req.setFlagForAdmin(true);
-                    messageMods(String.format("%s[ModReq] Request #%d has been flagged for admin.", ChatColor.GREEN, req.getId()));
+                    messageMods(String.format(config.MOD_REQUEST_ELEVATED, req.getId()));
                     reqTable.save(req);
+                } else {
+                    sender.sendMessage(config.MOD_UNCLAIM_TO_ELEVATE);
                 }
             }
             catch (NumberFormatException ex) {
-                sender.sendMessage(ChatColor.RED + "[ModReq] Error: Expected a number for request.");
+                sender.sendMessage(config.MOD_INVALID_REQUEST_NUMBER);
             }
         } else if ( command.getName().equalsIgnoreCase("mr-reset")) {
             try {
                 resetDatabase();
-                sender.sendMessage(ChatColor.GREEN + "[ModReq] Database has been reset.");
+                sender.sendMessage(config.MOD_DATABASE_RESET);
             } catch (Exception ex) {
                 getLogger().log(Level.WARNING, "Failed to reset database", ex);
             }
@@ -437,17 +459,22 @@ public class ModReq extends JavaPlugin {
 
     private void messageRequestToPlayer(CommandSender sender, Request req) {
         List<String> messages = new ArrayList<String>();
-        ChatColor onlineStatus = ChatColor.RED;
+        String onlineStatus = config.OFFLINE_COLOR;
         
         if (getServer().getPlayerExact(req.getPlayerName()) != null) {
-            onlineStatus = ChatColor.GREEN;
+            onlineStatus = config.ONLINE_COLOR;
         }
         Location loc = stringToLocation(req.getRequestLocation());
         String location = String.format("%s, %d, %d, %d", loc.getWorld().getName(), Math.round(loc.getX()), Math.round(loc.getY()), Math.round(loc.getZ()));
-        
-        messages.add(String.format("%sMod Request #%d - %s%s%s", ChatColor.AQUA, req.getId(), ChatColor.YELLOW, req.getStatus().toString(), ((req.getStatus() == RequestStatus.CLAIMED)?" by " + req.getAssignedMod():"")));
-        messages.add(String.format("%sFiled by %s%s%s at %s%s%s at %s%s", ChatColor.YELLOW, onlineStatus, req.getPlayerName(), ChatColor.YELLOW, ChatColor.GREEN, timestampToDateString(req.getRequestTime()), ChatColor.YELLOW, ChatColor.GREEN, location));
-        messages.add(String.format("%s%s", ChatColor.GRAY, req.getRequest()));
+        messages.add(String.format(config.PLAYER_MOD_REQUEST_FROM,
+                                   req.getId(),
+                                   req.getStatus().toString() + ((req.getStatus() == RequestStatus.CLAIMED)?" by " + req.getAssignedMod():"")));
+        String lastColor = ChatColor.getLastColors(config.PLAYER_MOD_REQUEST_FILED.split("%s")[0]);
+        messages.add(String.format(config.PLAYER_MOD_REQUEST_FILED,
+                                   onlineStatus + req.getPlayerName() + lastColor,
+                                   timestampToDateString(req.getRequestTime()),
+                                   location));
+        messages.add(String.format(config.PLAYER_MOD_REQUEST_MESSAGE, req.getRequest()));
         
         sender.sendMessage(messages.toArray(new String[1]));
     }
@@ -455,9 +482,9 @@ public class ModReq extends JavaPlugin {
     private void messageRequestListToPlayer(CommandSender sender, List<Request> reqs, int page, int totalRequests, boolean showPage) {
         List<String> messages = new ArrayList<String>();
         
-        messages.add(String.format("%s---- %d Mod Requests ----", ChatColor.AQUA, totalRequests));
+        messages.add(String.format(config.MOD_REQUEST_LIST_HEADER, totalRequests));
         for (Request r : reqs) {
-            ChatColor onlineStatus = ChatColor.RED;
+            String onlineStatus = config.OFFLINE_COLOR;
             String message = "";
             if (r.getRequest().length() > 20) {
                 message = r.getRequest().substring(0, 17) + "...";
@@ -465,10 +492,22 @@ public class ModReq extends JavaPlugin {
                 message = r.getRequest();
             }
             if (getServer().getPlayerExact(r.getPlayerName()) != null) {
-                onlineStatus = ChatColor.GREEN;
+                onlineStatus = config.ONLINE_COLOR;
             }
+            String[] parts = config.MOD_REQUEST_LIST_ITEM.split("%s");
+            String afterAdminColor = ChatColor.getLastColors(parts[0]);
+            StringBuilder before = new StringBuilder();
+            for (int i = 0; i < parts.length - 1; i++)
+                before.append(parts[i]);
+            String lastColor = ChatColor.getLastColors(before.toString());
             try {
-                messages.add(String.format("%s#%d.%s [%s%s%s] %s by %s%s%s - %s%s", ChatColor.GOLD, r.getId(), ((r.isFlagForAdmin())?(ChatColor.AQUA + " [ADMIN]" + ChatColor.GOLD):""), ChatColor.GREEN ,((r.getStatus() == RequestStatus.CLAIMED)?r.getAssignedMod():r.getStatus().toString()), ChatColor.GOLD, timestampToDateString(r.getRequestTime()), onlineStatus, r.getPlayerName(), ChatColor.GOLD, ChatColor.GRAY, message));
+                messages.add(String.format(config.MOD_REQUEST_LIST_ITEM, 
+                                           r.getId(),
+                                           ((r.isFlagForAdmin())?(config.ADMIN_COLOR + "[ADMIN] " + afterAdminColor):""),
+                                           ((r.getStatus() == RequestStatus.CLAIMED)?r.getAssignedMod():r.getStatus().toString()),
+                                           timestampToDateString(r.getRequestTime()),
+                                           onlineStatus + r.getPlayerName() + lastColor,
+                                           message));
             }
             catch (Exception ex) {
                 ex.printStackTrace();
@@ -476,7 +515,7 @@ public class ModReq extends JavaPlugin {
         }
         
         if (showPage) {
-            messages.add(String.format("%s---- Page %d of %d ----", ChatColor.AQUA, page, (int)Math.ceil(totalRequests / 5.0)));
+            messages.add(String.format(config.MOD_REQUEST_LIST_FOOTER, page, (int)Math.ceil(totalRequests / 5.0)));
         }
         
         sender.sendMessage(messages.toArray(new String[1]));
