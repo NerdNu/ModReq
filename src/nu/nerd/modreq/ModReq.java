@@ -171,11 +171,15 @@ public class ModReq extends JavaPlugin {
                 }
             } else if (requestId > 0) {
                 Request req = reqTable.getRequest(requestId);
-                totalRequests = 1;
-                if (limitName != null && req.getPlayerName().equalsIgnoreCase(limitName)) {
-                    requests.add(req);
-                } else if (limitName == null) {
-                    requests.add(req);
+                if (req != null) {
+                    totalRequests = 1;
+                    if (limitName != null && req.getPlayerName().equalsIgnoreCase(limitName)) {
+                        requests.add(req);
+                    } else if (limitName == null) {
+                        requests.add(req);
+                    } else {
+                        totalRequests = 0;
+                    }
                 } else {
                     totalRequests = 0;
                 }
