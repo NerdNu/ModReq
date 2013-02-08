@@ -21,7 +21,9 @@ public class RequestTable {
 	public List<Request> getUserRequests(String username) {
 		List<Request> retVal = new ArrayList<Request>();
 		
-		Query<Request> query = plugin.getDatabase().find(Request.class).where().ieq("playerName", username).eq("status", RequestStatus.OPEN).query();
+		Query<Request> query = plugin.getDatabase().find(Request.class).where()
+                        .ieq("playerName", username)
+                        .in("status", RequestStatus.OPEN, RequestStatus.CLAIMED).query();
 		
 		if (query != null) {
 			retVal.addAll(query.findList());
