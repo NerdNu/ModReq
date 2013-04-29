@@ -61,8 +61,8 @@ public class RequestTable {
                 
 		ExpressionList<Request> expressions = plugin.getDatabase().find(Request.class).where().in("status", statuses);
                 
-                if (includeElevated)
-                    expressions.where().eq("flagForAdmin", true);
+                if (!includeElevated)
+                    expressions.where().eq("flagForAdmin", false);
                 
                 Query<Request> query = expressions.query();
 		
@@ -78,8 +78,8 @@ public class RequestTable {
 
 		ExpressionList<Request> expressions = plugin.getDatabase().find(Request.class).where().in("status", statuses);
                 
-                if (includeElevated)
-                    expressions.where().eq("flagForAdmin", true);
+                if (!includeElevated)
+                    expressions.where().eq("flagForAdmin", false);
                 
                 Query<Request> query = expressions.query();
 		
