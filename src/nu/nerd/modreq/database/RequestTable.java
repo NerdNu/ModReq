@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.avaje.ebean.Expr;
+import com.avaje.ebean.ExpressionList;
 import com.avaje.ebean.PagingList;
 import com.avaje.ebean.Query;
 
@@ -55,9 +56,15 @@ public class RequestTable {
 		return retVal;
 	}
 	
-	public int getTotalRequest(RequestStatus ... statuses) {
+	public int getTotalRequest(boolean includeElevated, RequestStatus ... statuses) {
 		int retVal = 0;
-		Query<Request> query = plugin.getDatabase().find(Request.class).where().in("status", statuses).query();
+                
+		ExpressionList<Request> expressions = plugin.getDatabase().find(Request.class).where().in("status", statuses);
+                
+                if (includeElevated)
+                    expressions.where().eq("flagForAdmin", true);
+                
+                Query<Request> query = expressions.query();
 		
 		if (query != null) {
 			retVal = query.findRowCount();
@@ -66,9 +73,15 @@ public class RequestTable {
 		return retVal;
 	}
 	
-	public List<Request> getRequestPage(int page, int perPage, RequestStatus ... statuses) {
+	public List<Request> getRequestPage(int page, int perPage, boolean includeElevated, RequestStatus ... statuses) {
 		List<Request> retVal = new ArrayList<Request>();
-		Query<Request> query = plugin.getDatabase().find(Request.class).where().in("status", statuses).query();
+
+		ExpressionList<Request> expressions = plugin.getDatabase().find(Request.class).where().in("status", statuses);
+                
+                if (includeElevated)
+                    expressions.where().eq("flagForAdmin", true);
+                
+                Query<Request> query = expressions.query();
 		
 		if (query != null) {
 			retVal.addAll(query.findPagingList(perPage).getPage(page).getList());

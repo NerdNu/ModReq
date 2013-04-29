@@ -56,7 +56,7 @@ public class ModReq extends JavaPlugin {
     }
     
     public void resetDatabase() {
-        List<Request> reqs = reqTable.getRequestPage(0, 1000, RequestStatus.OPEN, RequestStatus.CLAIMED);
+        List<Request> reqs = reqTable.getRequestPage(0, 1000, true, RequestStatus.OPEN, RequestStatus.CLAIMED);
         
         removeDDL();
         
@@ -88,6 +88,7 @@ public class ModReq extends JavaPlugin {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String name, String[] args) {
+        boolean includeElevated = sender.hasPermission("modreq.cleardb");
         String senderName = ChatColor.stripColor(sender.getName());
         if (sender instanceof ConsoleCommandSender) {
             senderName = "Console";
@@ -166,8 +167,8 @@ public class ModReq extends JavaPlugin {
                     requests.addAll(reqTable.getUserRequests(limitName));
                     totalRequests = requests.size();
                 } else {
-                    requests.addAll(reqTable.getRequestPage(page - 1, 5, RequestStatus.OPEN, RequestStatus.CLAIMED));
-                    totalRequests = reqTable.getTotalRequest(RequestStatus.OPEN, RequestStatus.CLAIMED);
+                    requests.addAll(reqTable.getRequestPage(page - 1, 5, includeElevated, RequestStatus.OPEN, RequestStatus.CLAIMED));
+                    totalRequests = reqTable.getTotalRequest(includeElevated, RequestStatus.OPEN, RequestStatus.CLAIMED);
                 }
             } else if (requestId > 0) {
                 Request req = reqTable.getRequest(requestId);
