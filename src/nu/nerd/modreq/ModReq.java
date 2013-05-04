@@ -488,7 +488,7 @@ public class ModReq extends JavaPlugin {
     }
     
     public void messageMods(String message) {
-        String permission = "modreq.mod";
+        String permission = "modreq.notice";
         this.getServer().broadcast(message, permission);
 
         Set<Permissible> subs = getServer().getPluginManager().getPermissionSubscriptions(permission);
