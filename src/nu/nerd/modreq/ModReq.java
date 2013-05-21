@@ -276,7 +276,7 @@ public class ModReq extends JavaPlugin {
                         req.setAssignedMod(null);
                         reqTable.save(req);
                         
-                        messageMods(String.format("%s%s is no longer handling request #%d", ChatColor.GREEN, senderName, requestId));
+                        messageMods(String.format("%s%s has unclaimed request #%d", ChatColor.GREEN, senderName, requestId));
                     }
                 }
             }
@@ -380,7 +380,7 @@ public class ModReq extends JavaPlugin {
                         req.setCloseSeenByUser(false);
                         reqTable.save(req);
                         
-                        messageMods(ChatColor.GREEN + String.format("[ModReq] Request #%d is no longer claimed.", requestId));
+                        messageMods(ChatColor.GREEN + String.format("[ModReq] Request #%d has been reopened by %s%s.", requestId));
                     }
                 }
             }
