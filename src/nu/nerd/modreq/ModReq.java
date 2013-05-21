@@ -125,14 +125,17 @@ public class ModReq extends JavaPlugin {
             }
         }
         else if (command.getName().equalsIgnoreCase("check")) {
+            
+            int offset = args[0].equalsIgnoreCase("-admin") ? 1 : 0;
+            
             int page = 1;
             int requestId = 0;
             int totalRequests = 0;
             String limitName = null;
             
-            if (args.length > 0 && !args[0].startsWith("p:")) {
+            if (args.length > offset && !args[offset].startsWith("p:")) {
                 try {
-                    requestId = Integer.parseInt(args[0]);
+                    requestId = Integer.parseInt(args[offset]);
                     page = 0;
                     
                 } catch (NumberFormatException ex) {
@@ -143,17 +146,23 @@ public class ModReq extends JavaPlugin {
             
             if (sender.hasPermission("modreq.check")) {
                 
-                if (args.length == 0) {
+                
+                
+                if (args.length == offset) {
                     page = 1;
                 }
-                else if (args[0].startsWith("p:")) {
+                else if (args[offset].startsWith("p:")) {
                     try {
-                        page = Integer.parseInt(args[0].substring(2));
+                        page = Integer.parseInt(args[offset].substring(2));
                         
                     } catch (NumberFormatException ex) {
                         sender.sendMessage(ChatColor.RED + "You must provide a number for pages.");
                         return true;
                     }
+                }
+                
+                if(offset == 1){
+                    includeElevated = true;
                 }
             }
             else {
