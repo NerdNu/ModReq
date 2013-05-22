@@ -126,16 +126,30 @@ public class ModReq extends JavaPlugin {
         }
         else if (command.getName().equalsIgnoreCase("check")) {
             
-            int offset = args[0].equalsIgnoreCase("-admin") ? 1 : 0;
+            int flagCount;
+            
+            for(flagCount = 0; flagCount < args.length; flagCount++){
+                if(!args[flagCount].startsWith("-")){
+                    break;
+                }
+                
+                
+                if(args[flagCount].equalsIgnoreCase("-admin")){
+                    includeElevated = true;
+                }
+                
+                
+                
+            }
             
             int page = 1;
             int requestId = 0;
             int totalRequests = 0;
             String limitName = null;
             
-            if (args.length > offset && !args[offset].startsWith("p:")) {
+            if (args.length > flagCount && !args[flagCount].startsWith("p:")) {
                 try {
-                    requestId = Integer.parseInt(args[offset]);
+                    requestId = Integer.parseInt(args[flagCount]);
                     page = 0;
                     
                 } catch (NumberFormatException ex) {
@@ -148,12 +162,12 @@ public class ModReq extends JavaPlugin {
                 
                 
                 
-                if (args.length == offset) {
+                if (args.length == flagCount) {
                     page = 1;
                 }
-                else if (args[offset].startsWith("p:")) {
+                else if (args[flagCount].startsWith("p:")) {
                     try {
-                        page = Integer.parseInt(args[offset].substring(2));
+                        page = Integer.parseInt(args[flagCount].substring(2));
                         
                     } catch (NumberFormatException ex) {
                         sender.sendMessage(ChatColor.RED + "You must provide a number for pages.");
@@ -161,9 +175,7 @@ public class ModReq extends JavaPlugin {
                     }
                 }
                 
-                if(offset == 1){
-                    includeElevated = true;
-                }
+                
             }
             else {
                 limitName = senderName;
