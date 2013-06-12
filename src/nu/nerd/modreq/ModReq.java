@@ -130,14 +130,38 @@ public class ModReq extends JavaPlugin {
             int totalRequests = 0;
             String limitName = null;
             
-            if (args.length > 0 && !args[0].startsWith("p:")) {
-                try {
-                    requestId = Integer.parseInt(args[0]);
-                    page = 0;
-                    
-                } catch (NumberFormatException ex) {
-                    sender.sendMessage(ChatColor.RED + "You must provide a number for requests.");
-                    return true;
+            for (int i = 1; i < args.length; i++) {
+                String arg = args[i];
+                if (arg.equalsIgnoreCase("--admin") || arg.equalsIgnoreCase("-a")) {
+                    includeElevated = true;
+                }
+                else if (arg.startsWith("p:")) {
+                    page = Integer.parseInt(arg.substring(2));
+                }
+                else if (arg.equalsIgnoreCase("--page") || arg.equalsIgnoreCase("-p")) {
+                    if (i+1 > args.length) {
+                        sender.sendMessage(ChatColor.RED + "You must specify a page number.");
+                        return true;
+                    }
+                    else {
+                        try {
+                            page = Integer.parseInt(args[i+1]);
+                            i++;
+                        }
+                        catch (NumberFormatException ex) {
+                            sender.sendMessage(ChatColor.RED + "You must specify a page number.");
+                            return true;
+                        }
+                    }
+                }
+                else {
+                    try {
+                        requestId = Integer.parseInt(arg);
+                    }
+                    catch (NumberFormatException ex) {
+                        sender.sendMessage(ChatColor.RED + "You must provide a number for requests.");
+                        return true;
+                    }
                 }
             }
             
@@ -145,15 +169,6 @@ public class ModReq extends JavaPlugin {
                 
                 if (args.length == 0) {
                     page = 1;
-                }
-                else if (args[0].startsWith("p:")) {
-                    try {
-                        page = Integer.parseInt(args[0].substring(2));
-                        
-                    } catch (NumberFormatException ex) {
-                        sender.sendMessage(ChatColor.RED + "You must provide a number for pages.");
-                        return true;
-                    }
                 }
             }
             else {
