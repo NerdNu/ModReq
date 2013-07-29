@@ -130,7 +130,7 @@ public class ModReq extends JavaPlugin {
             int totalRequests = 0;
             String limitName = null;
             
-            for (int i = 1; i < args.length; i++) {
+            for (int i = 0; i < args.length; i++) {
                 String arg = args[i];
                 if (arg.equalsIgnoreCase("--admin") || arg.equalsIgnoreCase("-a")) {
                     includeElevated = true;
