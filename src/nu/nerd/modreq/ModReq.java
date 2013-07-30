@@ -125,7 +125,8 @@ public class ModReq extends JavaPlugin {
             }
         }
         else if (command.getName().equalsIgnoreCase("check")) {
-            int page = 1;
+            // Setting page > 0 triggers a page listing.
+            int page = 0;
             int requestId = 0;
             int totalRequests = 0;
             String limitName = null;
@@ -166,7 +167,6 @@ public class ModReq extends JavaPlugin {
             }
             
             if (sender.hasPermission("modreq.check")) {
-                
                 if (args.length == 0) {
                     page = 1;
                 }
