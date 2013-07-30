@@ -166,12 +166,10 @@ public class ModReq extends JavaPlugin {
                 }
             }
             
-            if (sender.hasPermission("modreq.check")) {
-                if (args.length == 0) {
-                    page = 1;
-                }
+            if (args.length == 0) {
+                page = 1;
             }
-            else {
+            if (!sender.hasPermission("modreq.check")) {
                 limitName = senderName;
             }
             
