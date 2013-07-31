@@ -111,7 +111,7 @@ public class ModReq extends JavaPlugin {
                     req.setPlayerName(senderName);
                     req.setRequest(request.toString());
                     req.setRequestTime(System.currentTimeMillis());
-                    String location = String.format("%s,%f,%f,%f", player.getWorld().getName(), player.getLocation().getX(), player.getLocation().getY(), player.getLocation().getZ());
+                    String location = String.format("%s,%f,%f,%f,%f,%f", player.getWorld().getName(), player.getLocation().getX(), player.getLocation().getY(), player.getLocation().getZ(), player.getLocation().getYaw(), player.getLocation().getPitch());
                     req.setRequestLocation(location);
                     req.setStatus(RequestStatus.OPEN);
 
@@ -434,15 +434,20 @@ public class ModReq extends JavaPlugin {
     private Location stringToLocation(String requestLocation) {
         Location loc;
         double x, y, z;
+        float pitch, yaw;
         String world;
         String[] split = requestLocation.split(",");
         world = split[0];
         x = Double.parseDouble(split[1]);
         y = Double.parseDouble(split[2]);
         z = Double.parseDouble(split[3]);
-        
-        loc = new Location(getServer().getWorld(world), x, y, z);
-        
+	if (split.length > 4) {
+           yaw = Float.parseFloat(split[4]);
+           pitch = Float.parseFloat(split[5]);
+            loc = new Location(getServer().getWorld(world), x, y, z, yaw, pitch);
+	} else {
+           loc = new Location(getServer().getWorld(world), x, y, z);
+        }
         return loc;
     }
     
