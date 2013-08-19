@@ -380,7 +380,7 @@ public class ModReq extends JavaPlugin {
                         req.setCloseSeenByUser(false);
                         reqTable.save(req);
                         
-                        messageMods(ChatColor.GREEN + String.format("[ModReq] Request #%d has been reopened by %s%s.", requestId));
+                        messageMods(ChatColor.GREEN + String.format("[ModReq] Request #%d has been reopened by %s.", requestId, senderName));
                     }
                 }
             }
