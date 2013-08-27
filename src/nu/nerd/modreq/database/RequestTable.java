@@ -47,7 +47,7 @@ public class RequestTable {
 	
 	public int getNumRequestFromUser(String username) {
 		int retVal = 0;
-		Query<Request> query = plugin.getDatabase().find(Request.class).where().ieq("playerName", username).in("status", RequestStatus.OPEN, RequestStatus.CLAIMED).query();
+		Query<Request> query = plugin.getDatabase().find(Request.class).where().ieq("playerName", username).in("status", RequestStatus.OPEN).query();
 		
 		if (query != null) {
 			retVal = query.findRowCount();
