@@ -238,9 +238,14 @@ public class ModReq extends JavaPlugin {
                 if (sender instanceof Player) {
                     Player player = (Player)sender;
                     Request req = reqTable.getRequest(requestId);
-                    player.sendMessage(ChatColor.GREEN + "[ModReq] Teleporting you to request " + requestId);
-                    Location loc = stringToLocation(req.getRequestLocation());
-                    player.teleport(loc);
+                    if (req != null) {
+                        player.sendMessage(ChatColor.GREEN + "[ModReq] Teleporting you to request " + requestId);
+                        Location loc = stringToLocation(req.getRequestLocation());
+                        player.teleport(loc);
+                    }
+                    else {
+                        sender.sendMessage(ChatColor.GREEN + "Either that request doesn't exist, or you do not have permission to view it.");
+                    } 
                 }
             }
             catch (NumberFormatException ex) {
