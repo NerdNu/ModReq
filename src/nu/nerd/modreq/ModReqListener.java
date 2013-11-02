@@ -24,7 +24,9 @@ class ModReqListener implements Listener {
         if (event.getPlayer().hasPermission("modreq.check")) {
             boolean includeElevated = event.getPlayer().hasPermission("modreq.cleardb");
             int open = plugin.reqTable.getTotalRequest(includeElevated, RequestStatus.OPEN, RequestStatus.CLAIMED);
-            event.getPlayer().sendMessage(ChatColor.GREEN + "There are " + open + " open mod requests. Type /check to see them.");
+            if (open > 0) {
+                event.getPlayer().sendMessage(ChatColor.GREEN + "There are " + open + " open mod requests. Type /check to see them.");
+            }
         }
         
         List<Request> missedClosed = plugin.reqTable.getMissedClosedRequests(ChatColor.stripColor(event.getPlayer().getName()));
