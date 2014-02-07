@@ -53,6 +53,11 @@ public class Configuration {
     public void load() {
         plugin.reloadConfig();
         
+        GENERAL__REQUEST_NUMBER = plugin.getConfig().getString("messages.general.request-number");
+        GENERAL__REQUEST_FILED = plugin.getConfig().getString("messages.general.request-filed");
+        GENERAL__MAX_REQUESTS = plugin.getConfig().getString("messages.general.max-requests");
+        GENERAL__REQUEST_ERROR = plugin.getConfig().getString("messages.general.request-error");
+        GENERAL__NO_REQUESTS = plugin.getConfig().getString("messages.general.no-requests");
         GENERAL__CLOSE_ERROR = plugin.getConfig().getString("messages.general.page-error");
         GENERAL__COMPLETED = plugin.getConfig().getString("messages.general.completed");
         GENERAL__COMPLETED_MESSAGE = plugin.getConfig().getString("messages.general.completed-message");
