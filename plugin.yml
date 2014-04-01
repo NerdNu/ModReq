@@ -55,6 +55,11 @@ commands:
     permission: modreq.cleardb
     usage: |
            /<command>: Reset the modreq database.
+  mr-note:
+    description: Add and remove notes to requests.
+    permission: modreq.mod
+    usage: |
+           /<command> <add|remove> <#> <body|note-id>
 
 permissions:
   modreq:

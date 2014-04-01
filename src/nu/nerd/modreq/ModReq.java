@@ -7,13 +7,15 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Dictionary;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 
 import javax.persistence.PersistenceException;
+import nu.nerd.modreq.database.Note;
+import nu.nerd.modreq.database.NoteTable;
 
 import nu.nerd.modreq.database.Request;
 import nu.nerd.modreq.database.Request.RequestStatus;
@@ -31,9 +33,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class ModReq extends JavaPlugin {
     ModReqListener listener = new ModReqListener(this);
     Configuration config = new Configuration(this);
-    Dictionary<String, String> environment = new Hashtable<String, String>();
+    Map<String, String> environment = new HashMap<String, String>();
 
     RequestTable reqTable;
+    NoteTable noteTable;
     
     @Override
     public void onEnable() {
@@ -47,6 +50,7 @@ public class ModReq extends JavaPlugin {
         config.load();
         
         reqTable = new RequestTable(this);
+        noteTable = new NoteTable(this);
         getServer().getPluginManager().registerEvents(listener, this);
     }
 
@@ -58,6 +62,7 @@ public class ModReq extends JavaPlugin {
     public boolean setupDatabase() {
         try {
             getDatabase().find(Request.class).findRowCount();
+            getDatabase().find(Note.class).findRowCount();
         } catch (PersistenceException ex) {
             getLogger().log(Level.INFO, "First run, initializing database.");
             installDDL();
@@ -95,6 +100,7 @@ public class ModReq extends JavaPlugin {
     public ArrayList<Class<?>> getDatabaseClasses() {
         ArrayList<Class<?>> list = new ArrayList<Class<?>>();
         list.add(Request.class);
+        list.add(Note.class);
         return list;
     }
 
@@ -142,6 +148,7 @@ public class ModReq extends JavaPlugin {
             int requestId = 0;
             int totalRequests = 0;
             String limitName = null;
+            boolean showNotes = true;
             
             for (int i = 0; i < args.length; i++) {
                 String arg = args[i];
@@ -183,6 +190,7 @@ public class ModReq extends JavaPlugin {
             }
             if (!sender.hasPermission("modreq.check")) {
                 limitName = senderName;
+                showNotes = false;
             }
             
             List<Request> requests = new ArrayList<Request>();
@@ -197,6 +205,8 @@ public class ModReq extends JavaPlugin {
                 }
             } else if (requestId > 0) {
                 Request req = reqTable.getRequest(requestId);
+                List<Note> notes = noteTable.getRequestNotes(req);
+                
                 if (req != null) {
                     totalRequests = 1;
                     if (limitName != null && req.getPlayerName().equalsIgnoreCase(limitName)) {
@@ -224,7 +234,7 @@ public class ModReq extends JavaPlugin {
                     sendMessage(sender, config.MOD__NO_REQUESTS);
                 }
             } else if (totalRequests == 1 && requestId > 0) {
-                messageRequestToPlayer(sender, requests.get(0));
+                messageRequestToPlayer(sender, requests.get(0), showNotes);
             } else if (totalRequests > 0) {
                 if (page > 1 && requests.size() == 0) {
                     sendMessage(sender, config.MOD__EMPTY_PAGE);
@@ -468,6 +478,68 @@ public class ModReq extends JavaPlugin {
             } catch (Exception ex) {
                 getLogger().log(Level.WARNING, "Failed to reset database", ex);
             }
+        } else if ( command.getName().equalsIgnoreCase("mr-note")) {
+            if (args.length < 3) {
+                return false;
+            }
+            if (sender.hasPermission("modreq.mod")) {
+                int reqId;
+                
+                try {
+                    reqId = Integer.parseInt(args[1].trim());
+                } catch (NumberFormatException e) {
+                    return false;
+                }
+                
+                Request request = reqTable.getRequest(reqId);
+                if (request == null) {
+                    return false;
+                }
+                
+                if (args[0].equalsIgnoreCase("remove")) {
+                    
+                    //kind of hacky but works
+                    int idToRemove;
+                    
+                    try {
+                        idToRemove = Integer.parseInt(args[2]);
+                    } catch (NumberFormatException e) {
+                        return false;
+                    }
+                    
+                    List<Note> notes = noteTable.getRequestNotes(request);
+                    
+                    Note noteToRemove = notes.get(idToRemove - 1);
+                    if(noteToRemove == null) {
+                        return false;
+                    }
+                    
+                    noteTable.remove(noteToRemove);
+                    environment.put("request_id", Integer.toString(reqId));
+                    sender.sendMessage(buildMessage(config.MOD__NOTE_REMOVED));
+                    environment.remove("request_id");
+                } else if (args[0].equalsIgnoreCase("add")) {
+                    
+                    if(reqTable.getRequest(reqId) == null) {
+                        return false;
+                    }
+                    
+                    StringBuilder noteBody = new StringBuilder(args[2]);
+                    for (int i = 3; i < args.length; i++) {
+                        noteBody.append(" ").append(args[i]);
+                    }
+                    
+                    Note note = new Note();
+                    note.setNoteBody(noteBody.toString());
+                    note.setPlayer(sender.getName());
+                    note.setRequestId(reqId);
+                    noteTable.save(note);
+                    
+                    environment.put("request_id", Integer.toString(reqId));
+                    sender.sendMessage(buildMessage(config.MOD__NOTE_ADDED));
+                    environment.remove("request_id");
+                }
+            }
         }
 
         return true;
@@ -500,25 +572,30 @@ public class ModReq extends JavaPlugin {
         return format.format(cal.getTime());
     }
     
-    public String buildMessage(String message) {
-        while (environment.keys().hasMoreElements()) {
-            String key = environment.keys().nextElement();
-            String value = environment.get(key);
+    public String buildMessage(String inputMessage) {
+        String message = inputMessage;
+        
+        for (Map.Entry entry : environment.entrySet()) {
+            String key = (String)entry.getKey();
+            String value = (String)entry.getValue();
             if (key.equalsIgnoreCase("player")) {
                 if (getServer().getPlayerExact(value).isOnline()) {
-                    value = config.COLOUR__ONLINE + value;
+                    value = config.COLOR__ONLINE + value;
                 }
                 else {
-                    value = config.COLOUR__OFFLINE + value;
+                    value = config.COLOR__OFFLINE + value;
                 }
             }
+            
             message = message.replace("{" + key + "}", value);
         }
+        
+        
         message = ChatColor.translateAlternateColorCodes('&', message);
         return message;
     }
 
-    private void messageRequestToPlayer(CommandSender sender, Request req) {
+    private void messageRequestToPlayer(CommandSender sender, Request req, boolean showNotes) {
         List<String> messages = new ArrayList<String>();
         ChatColor onlineStatus = ChatColor.RED;
         
@@ -550,6 +627,23 @@ public class ModReq extends JavaPlugin {
         environment.put("request_message", req.getRequest());
         messages.add(buildMessage(config.GENERAL__ITEM__REQUEST));
         environment.remove("request_message");
+        
+        if (showNotes) {
+            List<Note> notes = noteTable.getRequestNotes(req);
+            
+            int i = 1;
+            for (Note note : notes) {
+                environment.put("id", Integer.toString(i));
+                environment.put("user", note.getPlayer());
+                environment.put("message", note.getNoteBody());
+                messages.add(buildMessage(config.GENERAL__ITEM__NOTE));
+                
+                i++;
+            }
+            environment.remove("id");
+            environment.remove("player");
+            environment.remove("message");
+        }
         
         sender.sendMessage(messages.toArray(new String[1]));
     }
