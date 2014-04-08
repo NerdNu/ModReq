@@ -1,6 +1,7 @@
 messages:
   general:
     page-error: "&CYou must specify a page number."
+    search-error: "&CYou must specify a search term."
     request-number: "&CYou must provide a number for requests."
     request-filed: "&ARequest has been filed. Please be patient for a moderator to complete your request."
     max-requests: "&CYou already have {max_requests} open requests, please wait for them to be completed."
@@ -34,7 +35,7 @@ messages:
     flagged: "&ARequest {request_id} has been flagged for admin."
     reset: "&ADatabase has been reset."
     already-closed: "&CRequest already closed."
-color:
+colour:
   online: "&A"
   offline: "&C"
 max-requests: 5

@@ -68,7 +68,7 @@ public class ModReq extends JavaPlugin {
     }
     
     public void resetDatabase() {
-        List<Request> reqs = reqTable.getRequestPage(0, 1000, true, RequestStatus.OPEN, RequestStatus.CLAIMED);
+        List<Request> reqs = reqTable.getRequestPage(0, 1000, true, null, RequestStatus.OPEN, RequestStatus.CLAIMED);
         
         removeDDL();
         
@@ -138,9 +138,10 @@ public class ModReq extends JavaPlugin {
         }
         else if (command.getName().equalsIgnoreCase("check")) {
             // Setting page > 0 triggers a page listing.
-            int page = 0;
+            int page = 1;
             int requestId = 0;
             int totalRequests = 0;
+            String searchTerm = null;
             String limitName = null;
             
             for (int i = 0; i < args.length; i++) {
@@ -167,9 +168,20 @@ public class ModReq extends JavaPlugin {
                         }
                     }
                 }
+                else if (arg.equalsIgnoreCase("--search") || arg.equalsIgnoreCase("-s")) {
+                    if (i+1 <= args.length) {
+                        searchTerm = args[i+1];
+                        i++;
+                    }
+                    else {
+                        sendMessage(sender, config.GENERAL__SEARCH_ERROR);
+                        return true;
+                    }
+                }
                 else {
                     try {
                         requestId = Integer.parseInt(arg);
+                        page = 0;
                     }
                     catch (NumberFormatException ex) {
                         sendMessage(sender, config.GENERAL__REQUEST_NUMBER);
@@ -178,9 +190,6 @@ public class ModReq extends JavaPlugin {
                 }
             }
             
-            if (args.length == 0) {
-                page = 1;
-            }
             if (!sender.hasPermission("modreq.check")) {
                 limitName = senderName;
             }
@@ -192,8 +201,8 @@ public class ModReq extends JavaPlugin {
                     requests.addAll(reqTable.getUserRequests(limitName));
                     totalRequests = requests.size();
                 } else {
-                    requests.addAll(reqTable.getRequestPage(page - 1, 5, includeElevated, RequestStatus.OPEN, RequestStatus.CLAIMED));
-                    totalRequests = reqTable.getTotalRequest(includeElevated, RequestStatus.OPEN, RequestStatus.CLAIMED);
+                    requests.addAll(reqTable.getRequestPage(page - 1, 5, includeElevated, searchTerm, RequestStatus.OPEN, RequestStatus.CLAIMED));
+                    totalRequests = reqTable.getTotalRequest(includeElevated, searchTerm, RequestStatus.OPEN, RequestStatus.CLAIMED);
                 }
             } else if (requestId > 0) {
                 Request req = reqTable.getRequest(requestId);
@@ -504,6 +513,7 @@ public class ModReq extends JavaPlugin {
         while (environment.keys().hasMoreElements()) {
             String key = environment.keys().nextElement();
             String value = environment.get(key);
+            environment.remove(key);
             if (key.equalsIgnoreCase("player")) {
                 if (getServer().getPlayerExact(value).isOnline()) {
                     value = config.COLOUR__ONLINE + value;
@@ -520,11 +530,6 @@ public class ModReq extends JavaPlugin {
 
     private void messageRequestToPlayer(CommandSender sender, Request req) {
         List<String> messages = new ArrayList<String>();
-        ChatColor onlineStatus = ChatColor.RED;
-        
-        if (getServer().getPlayerExact(req.getPlayerName()) != null) {
-            onlineStatus = ChatColor.GREEN;
-        }
         Location loc = stringToLocation(req.getRequestLocation());
         String location = String.format("%s, %d, %d, %d", loc.getWorld().getName(), Math.round(loc.getX()), Math.round(loc.getY()), Math.round(loc.getZ()));
         

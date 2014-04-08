@@ -9,6 +9,7 @@ public class Configuration {
     private ModReq plugin;
     
     public String GENERAL__PAGE_ERROR;
+    public String GENERAL__SEARCH_ERROR;
     public String GENERAL__REQUEST_NUMBER;
     public String GENERAL__REQUEST_FILED;
     public String GENERAL__MAX_REQUESTS;
@@ -62,14 +63,15 @@ public class Configuration {
         GENERAL__COMPLETED = plugin.getConfig().getString("messages.general.completed");
         GENERAL__COMPLETED_MESSAGE = plugin.getConfig().getString("messages.general.completed-message");
         GENERAL__DELETED = plugin.getConfig().getString("messages.general.deleted");
-        GENERAL__PAGE_ERROR = plugin.getConfig().getString("messages.page-error");
+        GENERAL__PAGE_ERROR = plugin.getConfig().getString("messages.general.page-error");
+        GENERAL__SEARCH_ERROR = plugin.getConfig().getString("messages.general.search-error");
         GENERAL__ITEM__DETAILS = plugin.getConfig().getString("messages.general.item.details");
         GENERAL__ITEM__HEADER_CLAIMED = plugin.getConfig().getString("messages.general.item.header-claimed");
         GENERAL__ITEM__HEADER_UNCLAIMED = plugin.getConfig().getString("messages.general.item.header-unclaimed");
         GENERAL__ITEM__REQUEST = plugin.getConfig().getString("messages.general.item.request");
-        GENERAL__LIST__FOOTER = plugin.getConfig().getString("messages.list.footer");
-        GENERAL__LIST__HEADER = plugin.getConfig().getString("messages.list.header");
-        GENERAL__LIST__ITEM = plugin.getConfig().getString("messages.list.item");
+        GENERAL__LIST__FOOTER = plugin.getConfig().getString("messages.general.list.footer");
+        GENERAL__LIST__HEADER = plugin.getConfig().getString("messages.general.list.header");
+        GENERAL__LIST__ITEM = plugin.getConfig().getString("messages.general.list.item");
         MOD__COMPLETED = plugin.getConfig().getString("messages.mod.completed");
         MOD__COMPLETED_MESSAGE = plugin.getConfig().getString("messages.mod.completed-message");
         MOD__DELETED = plugin.getConfig().getString("messages.mod.deleted");

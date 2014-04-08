@@ -23,7 +23,7 @@ class ModReqListener implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         if (event.getPlayer().hasPermission("modreq.check")) {
             boolean includeElevated = event.getPlayer().hasPermission("modreq.cleardb");
-            int open = plugin.reqTable.getTotalRequest(includeElevated, RequestStatus.OPEN, RequestStatus.CLAIMED);
+            int open = plugin.reqTable.getTotalRequest(includeElevated, null, RequestStatus.OPEN, RequestStatus.CLAIMED);
             if (open > 0) {
                 event.getPlayer().sendMessage(ChatColor.GREEN + "There are " + open + " open mod requests. Type /check to see them.");
             }
