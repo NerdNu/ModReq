@@ -128,6 +128,7 @@ public class ModReq extends JavaPlugin {
                     req.setStatus(RequestStatus.OPEN);
 
                     reqTable.save(req);
+                    environment.put("request_id", String.valueOf(req.getId()));
                     messageMods(config.MOD__NEW_REQUEST);
                     sendMessage(sender, config.GENERAL__REQUEST_FILED);
                 } else {

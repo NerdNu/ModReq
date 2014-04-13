@@ -22,7 +22,7 @@ messages:
       details: "&EFiled by {player}&E at &A{time}&E at&A {location}"
       request: "&A{request_message}"
   mod:
-    new-request: "&ANew request. Type /check for more"
+    new-request: "&ANew request. Type /check {request_id} for more information."
     no-requests: "&AThere are currently no open mod requests."
     empty-page: "&CThere are no requests on that page."
     teleport: "&ATeleporting you to request {request_id}."
