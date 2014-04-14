@@ -170,7 +170,7 @@ public class ModReq extends JavaPlugin {
                     }
                 }
                 else if (arg.equalsIgnoreCase("--search") || arg.equalsIgnoreCase("-s")) {
-                    if (i+1 <= args.length) {
+                    if (i+1 < args.length) {
                         searchTerm = args[i+1];
                         i++;
                     }
@@ -516,7 +516,8 @@ public class ModReq extends JavaPlugin {
             String value = environment.get(key);
             environment.remove(key);
             if (key.equalsIgnoreCase("player")) {
-                if (getServer().getPlayerExact(value).isOnline()) {
+            	Player p = getServer().getPlayerExact(value);
+                if (p != null && p.isOnline()) {
                     value = config.COLOUR__ONLINE + value;
                 }
                 else {
