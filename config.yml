@@ -1,0 +1,41 @@
+messages:
+  general:
+    page-error: "&CYou must specify a page number."
+    search-error: "&CYou must specify a search term."
+    request-number: "&CYou must provide a number for requests."
+    request-filed: "&ARequest has been filed. Please be patient for a moderator to complete your request."
+    max-requests: "&CYou already have {max_requests} open requests, please wait for them to be completed."
+    request-error: "&AEither that request doesn't exist, or you do not have permission to view it."
+    no-requests: "&AYou don't have any outstanding requests."
+    request-taken: "&A{mod} is now handling request {request_id}."
+    close-error: "&CYou can only close your own requests."
+    completed: "{mod} completed your request."
+    completed-message: "{mod} completed your request - {close_message}."
+    deleted: "Request {request_id} has been closed by you."
+    list:
+      header: "&B---- {num_requests} Mod Requests ----"
+      item: "&6{request_id}.{admin}&6 [&A{mod}{status}&6] {time} {player} -&7 {request_message}"
+      footer: "&B---- Page {page} of {num_pages} ----"
+    item:
+      header-unclaimed: "&BMod Request {request_id} - &E{status}"
+      header-claimed: "&BMod Request {request_id} - &E{status} by {mod}"
+      details: "&EFiled by {player}&E at &A{time}&E at&A {location}"
+      request: "&A{request_message}"
+  mod:
+    new-request: "&ANew request. Type /check {request_id} for more information."
+    no-requests: "&AThere are currently no open mod requests."
+    empty-page: "&CThere are no requests on that page."
+    teleport: "&ATeleporting you to request {request_id}."
+    unclaim: "&A{mod} has unclaimed request {request_id}."
+    request-taken: "&A{mod} is now handling request {request_id}."
+    completed: "&ARequest {request_id} has been completed by {mod}."
+    completed-message: "Close message - &7{close_message}."
+    deleted: "Request {request_id} no longer needs to be handled."
+    reopened: "Request {request_id} has been reopened by {mod}"
+    flagged: "&ARequest {request_id} has been flagged for admin."
+    reset: "&ADatabase has been reset."
+    already-closed: "&CRequest already closed."
+colour:
+  online: "&A"
+  offline: "&C"
+max-requests: 5

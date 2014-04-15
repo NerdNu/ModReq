@@ -47,7 +47,7 @@ public class RequestTable {
 	
 	public int getNumRequestFromUser(String username) {
 		int retVal = 0;
-		Query<Request> query = plugin.getDatabase().find(Request.class).where().ieq("playerName", username).in("status", RequestStatus.OPEN, RequestStatus.CLAIMED).query();
+		Query<Request> query = plugin.getDatabase().find(Request.class).where().ieq("playerName", username).in("status", RequestStatus.OPEN).query();
 		
 		if (query != null) {
 			retVal = query.findRowCount();
@@ -56,13 +56,18 @@ public class RequestTable {
 		return retVal;
 	}
 	
-	public int getTotalRequest(boolean includeElevated, RequestStatus ... statuses) {
+	public int getTotalRequest(boolean includeElevated, String searchTerm, RequestStatus ... statuses) {
 		int retVal = 0;
                 
 		ExpressionList<Request> expressions = plugin.getDatabase().find(Request.class).where().in("status", statuses);
                 
+                if (searchTerm != null)
+                {
+                    expressions = expressions.where().ilike("request", "%"+searchTerm+"%");
+                }
+                
                 if (!includeElevated)
-                    expressions.where().eq("flagForAdmin", false);
+                    expressions = expressions.where().eq("flagForAdmin", false);
                 
                 Query<Request> query = expressions.query();
 		
@@ -73,10 +78,15 @@ public class RequestTable {
 		return retVal;
 	}
 	
-	public List<Request> getRequestPage(int page, int perPage, boolean includeElevated, RequestStatus ... statuses) {
+	public List<Request> getRequestPage(int page, int perPage, boolean includeElevated, String searchTerm, RequestStatus ... statuses) {
 		List<Request> retVal = new ArrayList<Request>();
 
 		ExpressionList<Request> expressions = plugin.getDatabase().find(Request.class).where().in("status", statuses);
+                
+                if (searchTerm != null)
+                {
+                    expressions.where().ilike("request", "%"+searchTerm+"%");
+                }
                 
                 if (!includeElevated)
                     expressions.where().eq("flagForAdmin", false);
