@@ -261,6 +261,7 @@ public class ModReq extends JavaPlugin {
                     Player player = (Player)sender;
                     Request req = reqTable.getRequest(requestId);
                     if (req != null) {
+                        environment.put("request_id", String.valueOf(req.getId()));
                         sendMessage(player, config.MOD__TELEPORT);
                         Location loc = stringToLocation(req.getRequestLocation());
                         player.teleport(loc);
@@ -394,11 +395,15 @@ public class ModReq extends JavaPlugin {
                                 String message = "";
                                 environment.put("close_message", doneMessage);
                                 environment.put("mod", senderName);
+                                environment.put("request_id", String.valueOf(req.getId()));
                                 if (doneMessage != null && doneMessage.length() != 0) {
                                     sendMessage(requestCreator, config.GENERAL__COMPLETED_MESSAGE);
                                 } else {
                                     sendMessage(requestCreator, config.GENERAL__COMPLETED);
                                 }
+                                environment.put("close_message", doneMessage);
+                                environment.put("mod", senderName);
+                                environment.put("request_id", String.valueOf(req.getId()));
                                 requestCreator.sendMessage(ChatColor.GREEN + message);
                                 environment.remove("close_message");
                                 environment.remove("mod");
@@ -407,6 +412,7 @@ public class ModReq extends JavaPlugin {
                                 if (!sender.hasPermission("modreq.done")) {
                                     environment.put("request_id", String.valueOf(requestId));
                                     messageMods(config.MOD__DELETED);
+                                    environment.put("request_id", String.valueOf(requestId));
                                     sendMessage(sender, config.GENERAL__DELETED);
                                     environment.remove("request_id");
                                 }
