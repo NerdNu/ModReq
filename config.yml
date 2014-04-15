@@ -29,7 +29,7 @@ messages:
     unclaim: "&A{mod} has unclaimed request {request_id}."
     request-taken: "&A{mod} is now handling request {request_id}."
     completed: "&ARequest {request_id} has been completed by {mod}."
-    completed-message: "Close message - &7{close_message}."
+    completed-message: "Close message - &7{close_message}"
     deleted: "Request {request_id} no longer needs to be handled."
     reopened: "Request {request_id} has been reopened by {mod}."
     flagged: "&ARequest {request_id} has been flagged for admin."
