@@ -20,7 +20,7 @@ messages:
       header-unclaimed: "&BMod Request {request_id} - &E{status}"
       header-claimed: "&BMod Request {request_id} - &E{status} by {mod}"
       details: "&EFiled by {player}&E at &A{time}&E at&A {location}"
-      request: "&A{request_message}"
+      request: "&7{request_message}"
   mod:
     new-request: "&ANew request. Type /check {request_id} for more information."
     no-requests: "&AThere are currently no open mod requests."
@@ -31,7 +31,7 @@ messages:
     completed: "&ARequest {request_id} has been completed by {mod}."
     completed-message: "Close message - &7{close_message}."
     deleted: "Request {request_id} no longer needs to be handled."
-    reopened: "Request {request_id} has been reopened by {mod}"
+    reopened: "Request {request_id} has been reopened by {mod}."
     flagged: "&ARequest {request_id} has been flagged for admin."
     reset: "&ADatabase has been reset."
     already-closed: "&CRequest already closed."
