@@ -10,7 +10,7 @@ messages:
     request-taken: "&A{mod} is now handling request {request_id}."
     close-error: "&CYou can only close your own requests."
     completed: "&A{mod} completed your request."
-    completed-message: "{mod} completed your request - &7{close_message}"
+    completed-message: "&A{mod} completed your request &F- &7{close_message}"
     deleted: "&ARequest {request_id} has been closed by you."
     list:
       header: "&B---- {num_requests} Mod Requests ----"
