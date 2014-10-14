@@ -34,7 +34,7 @@ public class ModReq extends JavaPlugin {
     Dictionary<String, String> environment = new Hashtable<String, String>();
 
     RequestTable reqTable;
-    
+
     @Override
     public void onEnable() {
         setupDatabase();
@@ -54,7 +54,7 @@ public class ModReq extends JavaPlugin {
     public void onDisable() {
         // tear down
     }
-    
+
     public boolean setupDatabase() {
         try {
             getDatabase().find(Request.class).findRowCount();
@@ -66,7 +66,7 @@ public class ModReq extends JavaPlugin {
         
         return false;
     }
-    
+
     public void resetDatabase() {
         List<Request> reqs = reqTable.getRequestPage(0, 1000, true, null, RequestStatus.OPEN, RequestStatus.CLAIMED);
         
@@ -90,7 +90,7 @@ public class ModReq extends JavaPlugin {
             }
         }
     }
-    
+
     @Override
     public ArrayList<Class<?>> getDatabaseClasses() {
         ArrayList<Class<?>> list = new ArrayList<Class<?>>();
@@ -488,7 +488,7 @@ public class ModReq extends JavaPlugin {
 
         return true;
     }
-    
+
     private Location stringToLocation(String requestLocation) {
         Location loc;
         double x, y, z;
@@ -499,30 +499,30 @@ public class ModReq extends JavaPlugin {
         x = Double.parseDouble(split[1]);
         y = Double.parseDouble(split[2]);
         z = Double.parseDouble(split[3]);
-	if (split.length > 4) {
+    if (split.length > 4) {
            yaw = Float.parseFloat(split[4]);
            pitch = Float.parseFloat(split[5]);
             loc = new Location(getServer().getWorld(world), x, y, z, yaw, pitch);
-	} else {
+    } else {
            loc = new Location(getServer().getWorld(world), x, y, z);
         }
         return loc;
     }
-    
+
     private String timestampToDateString(long timestamp) {
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(timestamp);
         SimpleDateFormat format = new SimpleDateFormat("MMM.d@k.m.s");
         return format.format(cal.getTime());
     }
-    
+
     public String buildMessage(String message) {
         while (environment.keys().hasMoreElements()) {
             String key = environment.keys().nextElement();
             String value = environment.get(key);
             environment.remove(key);
             if (key.equalsIgnoreCase("player")) {
-            	Player p = getServer().getPlayerExact(value);
+                Player p = getServer().getPlayerExact(value);
                 if (p != null && p.isOnline()) {
                     value = config.COLOUR__ONLINE + value;
                 }
@@ -566,7 +566,7 @@ public class ModReq extends JavaPlugin {
         
         sender.sendMessage(messages.toArray(new String[1]));
     }
-    
+
     private void messageRequestListToPlayer(CommandSender sender, List<Request> reqs, int page, int totalRequests, boolean showPage) {
         List<String> messages = new ArrayList<String>();
         
@@ -617,12 +617,12 @@ public class ModReq extends JavaPlugin {
         
         sender.sendMessage(messages.toArray(new String[1]));
     }
-    
+
     public void sendMessage(CommandSender sender, String message) {
         message = buildMessage(message);
         sender.sendMessage(message);
     }
-    
+
     public void messageMods(String message) {
         String permission = "modreq.notice";
         message = buildMessage(message);
