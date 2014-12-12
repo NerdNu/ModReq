@@ -26,6 +26,7 @@ public class Configuration {
     public String GENERAL__ITEM__HEADER_UNCLAIMED;
     public String GENERAL__ITEM__DETAILS;
     public String GENERAL__ITEM__REQUEST;
+    public String GENERAL__ITEM__NOTE;
     public String MOD__NEW_REQUEST;
     public String MOD__NO_REQUESTS;
     public String MOD__EMPTY_PAGE;
@@ -39,8 +40,10 @@ public class Configuration {
     public String MOD__FLAGGED;
     public String MOD__RESET;
     public String MOD__ALREADY_CLOSED;
-    public String COLOUR__ONLINE;
-    public String COLOUR__OFFLINE;
+    public String MOD__NOTE_ADDED;
+    public String MOD__NOTE_REMOVED;
+    public String COLOUR_ONLINE;
+    public String COLOUR_OFFLINE;
     public Integer MAX_REQUESTS;
     
     public Configuration(ModReq plugin) {
@@ -69,6 +72,7 @@ public class Configuration {
         GENERAL__ITEM__HEADER_CLAIMED = plugin.getConfig().getString("messages.general.item.header-claimed");
         GENERAL__ITEM__HEADER_UNCLAIMED = plugin.getConfig().getString("messages.general.item.header-unclaimed");
         GENERAL__ITEM__REQUEST = plugin.getConfig().getString("messages.general.item.request");
+        GENERAL__ITEM__NOTE = plugin.getConfig().getString("messages.general.item.note");
         GENERAL__LIST__FOOTER = plugin.getConfig().getString("messages.general.list.footer");
         GENERAL__LIST__HEADER = plugin.getConfig().getString("messages.general.list.header");
         GENERAL__LIST__ITEM = plugin.getConfig().getString("messages.general.list.item");
@@ -85,8 +89,10 @@ public class Configuration {
         MOD__UNCLAIM = plugin.getConfig().getString("messages.mod.unclaim");
         MOD__REQUEST_TAKEN = plugin.getConfig().getString("messages.mod.request-taken");
         MOD__ALREADY_CLOSED = plugin.getConfig().getString("messages.mod.already-closed");
-        COLOUR__OFFLINE = plugin.getConfig().getString("colour.offline");
-        COLOUR__ONLINE = plugin.getConfig().getString("colour.online");
+        MOD__NOTE_ADDED = plugin.getConfig().getString("messages.mod.note-added");
+        MOD__NOTE_REMOVED = plugin.getConfig().getString("messages.mod.note-removed");
+        COLOUR_OFFLINE = plugin.getConfig().getString("colour.offline");
+        COLOUR_ONLINE = plugin.getConfig().getString("colour.online");
         MAX_REQUESTS = plugin.getConfig().getInt("max-requests", 5);
     }
 }
