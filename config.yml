@@ -37,7 +37,7 @@ messages:
     already-closed: "&CRequest already closed."
     note-added: "&ANote added to request {request_id} successfully."
     note-removed: "&ANote removed from request {request_id} successfully."
-color:
+colour:
   online: "&A"
   offline: "&C"
 max-requests: 5

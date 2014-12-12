@@ -1,8 +1,5 @@
 package nu.nerd.modreq;
 
-import com.avaje.ebean.CallableSql;
-import com.avaje.ebean.SqlQuery;
-import com.avaje.ebean.SqlUpdate;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -580,10 +577,10 @@ public class ModReq extends JavaPlugin {
             String value = (String)entry.getValue();
             if (key.equalsIgnoreCase("player")) {
                 if (getServer().getPlayerExact(value).isOnline()) {
-                    value = config.COLOR__ONLINE + value;
+                    value = config.COLOUR_ONLINE + value;
                 }
                 else {
-                    value = config.COLOR__OFFLINE + value;
+                    value = config.COLOUR_OFFLINE + value;
                 }
             }
             

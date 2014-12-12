@@ -41,8 +41,8 @@ public class Configuration {
     public String MOD__ALREADY_CLOSED;
     public String MOD__NOTE_ADDED;
     public String MOD__NOTE_REMOVED;
-    public String COLOR__ONLINE;
-    public String COLOR__OFFLINE;
+    public String COLOUR_ONLINE;
+    public String COLOUR_OFFLINE;
     public Integer MAX_REQUESTS;
     
     public Configuration(ModReq plugin) {
@@ -89,8 +89,8 @@ public class Configuration {
         MOD__ALREADY_CLOSED = plugin.getConfig().getString("messages.mod.already-closed");
         MOD__NOTE_ADDED = plugin.getConfig().getString("messages.mod.note-added");
         MOD__NOTE_REMOVED = plugin.getConfig().getString("messages.mod.note-removed");
-        COLOR__OFFLINE = plugin.getConfig().getString("color.offline");
-        COLOR__ONLINE = plugin.getConfig().getString("color.online");
+        COLOUR_OFFLINE = plugin.getConfig().getString("colour.offline");
+        COLOUR_ONLINE = plugin.getConfig().getString("colour.online");
         MAX_REQUESTS = plugin.getConfig().getInt("max-requests", 5);
     }
 }
