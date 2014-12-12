@@ -592,7 +592,7 @@ public class ModReq extends JavaPlugin {
             String key = (String)entry.getKey();
             String value = (String)entry.getValue();
             if (key.equalsIgnoreCase("player")) {
-                if (getServer().getPlayerExact(value).isOnline()) {
+                if (getServer().getPlayerExact(value) != null) {
                     value = config.COLOUR_ONLINE + value;
                 }
                 else {
