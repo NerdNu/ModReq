@@ -20,7 +20,7 @@ messages:
       header-claimed: "&BMod Request {request_id} - &E{status} by {mod}"
       details: "&EFiled by {player}&E at &A{time}&E at&A {location}"
       request: "&A{request_message}"
-      note: "  &8[&CNote {id} - {user}&8] &7{message}"
+      note: "  &2[#{id} - {user}] &7{message}"
   mod:
     new-request: "&ANew request. Type /check for more"
     no-requests: "&AThere are currently no open mod requests."
