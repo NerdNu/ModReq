@@ -21,6 +21,7 @@ messages:
       header-claimed: "&BMod Request {request_id} - &E{status} by {mod}"
       details: "&EFiled by {player}&E at &A{time}&E at&A {location}"
       request: "&7{request_message}"
+      note: "  &2[#{id} - {user}] &7{message}"
   mod:
     new-request: "&ANew request. Type /check {request_id} for more information."
     no-requests: "&AThere are currently no open mod requests."
@@ -35,6 +36,8 @@ messages:
     flagged: "&ARequest {request_id} has been flagged for admin."
     reset: "&ADatabase has been reset."
     already-closed: "&CRequest already closed."
+    note-added: "&ANote added to request {request_id} successfully."
+    note-removed: "&ANote removed from request {request_id} successfully."
 colour:
   online: "&A"
   offline: "&C"
