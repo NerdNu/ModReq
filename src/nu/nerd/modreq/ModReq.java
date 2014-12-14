@@ -124,7 +124,9 @@ public class ModReq extends JavaPlugin {
                 if (reqTable.getNumRequestFromUser(senderName) < config.MAX_REQUESTS) {
                     Request req = new Request();
                     req.setPlayerName(senderName);
-                    req.setRequest(request.toString());
+                    String r = ChatColor.translateAlternateColorCodes('&', request.toString());
+                    r = ChatColor.stripColor(r);
+                    req.setRequest(r);
                     req.setRequestTime(System.currentTimeMillis());
                     String location = String.format("%s,%f,%f,%f,%f,%f", player.getWorld().getName(), player.getLocation().getX(), player.getLocation().getY(), player.getLocation().getZ(), player.getLocation().getYaw(), player.getLocation().getPitch());
                     req.setRequestLocation(location);
