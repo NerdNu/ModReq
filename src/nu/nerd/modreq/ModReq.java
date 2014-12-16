@@ -105,6 +105,7 @@ public class ModReq extends JavaPlugin {
     public boolean onCommand(CommandSender sender, Command command, String name, String[] args) {
         boolean includeElevated = sender.hasPermission("modreq.cleardb");
         String senderName = ChatColor.stripColor(sender.getName());
+        environment.clear();
         if (sender instanceof ConsoleCommandSender) {
             senderName = "Console";
         }
