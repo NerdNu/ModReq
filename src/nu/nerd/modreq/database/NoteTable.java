@@ -27,6 +27,12 @@ public class NoteTable {
         
         return requestNotes;
     }
+
+    public int getNoteCount(Request request) {
+
+        return parent.getDatabase().find(Note.class).where()
+                .eq("requestId", request.getId()).findRowCount();
+    }
     
     public void remove(Note note) {
         parent.getDatabase().delete(note);

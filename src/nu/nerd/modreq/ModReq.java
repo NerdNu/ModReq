@@ -668,6 +668,7 @@ public class ModReq extends JavaPlugin {
         for (Request r : reqs) {
             ChatColor onlineStatus = ChatColor.RED;
             String message = "";
+            int noteCount = noteTable.getNoteCount(r);
             if (r.getRequest().length() > 20) {
                 message = r.getRequest().substring(0, 17) + "...";
             } else {
@@ -678,6 +679,7 @@ public class ModReq extends JavaPlugin {
             }
             try {
                 environment.put("request_id", String.valueOf(r.getId()));
+                environment.put("note_count", noteCount>0?ChatColor.RED+" ["+Integer.toString(noteCount)+"]":"");
                 environment.put("admin", (r.isFlagForAdmin()?(ChatColor.AQUA + " [ADMIN]"):""));
                 environment.put("mod", (r.getStatus()==RequestStatus.CLAIMED?(r.getAssignedMod()):""));
                 environment.put("status", (r.getStatus()!=RequestStatus.CLAIMED?(r.getStatus().toString()):""));
@@ -686,6 +688,7 @@ public class ModReq extends JavaPlugin {
                 environment.put("request_message", r.getRequest());
                 messages.add(buildMessage(config.GENERAL__LIST__ITEM));
                 environment.remove("request_id");
+                environment.remove("note_count");
                 environment.remove("admin");
                 environment.remove("mod");
                 environment.remove("status");

@@ -14,7 +14,7 @@ messages:
     deleted: "&ARequest {request_id} has been closed by you."
     list:
       header: "&B---- {num_requests} Mod Requests ----"
-      item: "&6{request_id}.{admin}&6 [&A{mod}{status}&6] {time} {player} -&7 {request_message}"
+      item: "&6{request_id}.{note_count}{admin}&6 [&A{mod}{status}&6] {time} {player} -&7 {request_message}"
       footer: "&B---- Page {page} of {num_pages} ----"
     item:
       header-unclaimed: "&BMod Request {request_id} - &E{status}"
