@@ -29,7 +29,7 @@ class ModReqListener implements Listener {
             }
         }
         
-        List<Request> missedClosed = plugin.reqTable.getMissedClosedRequests(ChatColor.stripColor(event.getPlayer().getName()));
+        List<Request> missedClosed = plugin.reqTable.getMissedClosedRequests(event.getPlayer().getUniqueId());
         
         for (Request req : missedClosed) {
         	String doneMessage = req.getCloseMessage();

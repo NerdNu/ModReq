@@ -2,10 +2,9 @@ package nu.nerd.modreq.database;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
-import com.avaje.ebean.Expr;
 import com.avaje.ebean.ExpressionList;
-import com.avaje.ebean.PagingList;
 import com.avaje.ebean.Query;
 
 import nu.nerd.modreq.ModReq;
@@ -19,11 +18,11 @@ public class RequestTable {
         this.plugin = plugin;
     }
 
-    public List<Request> getUserRequests(String username) {
+    public List<Request> getUserRequests(UUID uuid) {
         List<Request> retVal = new ArrayList<Request>();
 
         Query<Request> query = plugin.getDatabase().find(Request.class).where()
-                        .ieq("playerName", username)
+                        .ieq("playerUUID", uuid.toString())
                         .in("status", RequestStatus.OPEN, RequestStatus.CLAIMED).query();
 
         if (query != null) {
@@ -33,10 +32,10 @@ public class RequestTable {
         return retVal;
     }
 
-    public List<Request> getMissedClosedRequests(String username) {
+    public List<Request> getMissedClosedRequests(UUID uuid) {
         List<Request> retVal = new ArrayList<Request>();
 
-        Query<Request> query = plugin.getDatabase().find(Request.class).where().ieq("playerName", username).eq("status", RequestStatus.CLOSED).eq("closeSeenByUser", false).query();
+        Query<Request> query = plugin.getDatabase().find(Request.class).where().ieq("playerUUID", uuid.toString()).eq("status", RequestStatus.CLOSED).eq("closeSeenByUser", false).query();
 
         if (query != null) {
             retVal.addAll(query.findList());
@@ -45,9 +44,9 @@ public class RequestTable {
         return retVal;
     }
 
-    public int getNumRequestFromUser(String username) {
+    public int getNumRequestFromUser(UUID uuid) {
         int retVal = 0;
-        Query<Request> query = plugin.getDatabase().find(Request.class).where().ieq("playerName", username).in("status", RequestStatus.OPEN).query();
+        Query<Request> query = plugin.getDatabase().find(Request.class).where().ieq("playerName", uuid.toString()).in("status", RequestStatus.OPEN).query();
 
         if (query != null) {
             retVal = query.findRowCount();
@@ -77,6 +76,15 @@ public class RequestTable {
 
         return retVal;
     }
+
+    public List<Request> getAllRequests() {
+		Query<Request> query = plugin.getDatabase().find(Request.class);
+		if (query != null) {
+			return query.findList();
+		}
+
+		return null;
+	}
 
     public List<Request> getRequestPage(int page, int perPage, boolean includeElevated, String searchTerm, RequestStatus ... statuses) {
         List<Request> retVal = new ArrayList<Request>();

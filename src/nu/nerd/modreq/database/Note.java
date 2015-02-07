@@ -6,6 +6,7 @@ import javax.persistence.Table;
 
 import com.avaje.ebean.validation.NotEmpty;
 import com.avaje.ebean.validation.NotNull;
+import java.util.UUID;
 
 @Entity
 @Table(name = "modreq_notes")
@@ -16,7 +17,13 @@ public class Note {
      */
     @Id
     private int id;
-    
+	
+    /**
+     * The uuid of the player who created the note.
+     */
+    @NotNull
+    private UUID playerUUID;
+	
     /**
      * The name of the player who created the note.
      */
@@ -48,6 +55,14 @@ public class Note {
     public void setId(int id) {
         this.id = id;
     }
+
+	public void setPlayerUUID(UUID playerUUID) {
+		this.playerUUID = playerUUID;
+	}
+	
+	public UUID getPlayerUUID() {
+		return this.playerUUID;
+	}
 
     /**
      * @return the player

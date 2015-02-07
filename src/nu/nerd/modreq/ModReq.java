@@ -1,13 +1,19 @@
 package nu.nerd.modreq;
 
+import com.avaje.ebean.SqlRow;
 import java.io.File;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.logging.Level;
 
 import javax.persistence.PersistenceException;
@@ -17,6 +23,7 @@ import nu.nerd.modreq.database.NoteTable;
 import nu.nerd.modreq.database.Request;
 import nu.nerd.modreq.database.Request.RequestStatus;
 import nu.nerd.modreq.database.RequestTable;
+import org.bukkit.Bukkit;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -26,6 +33,10 @@ import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permissible;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitScheduler;
+import org.gestern.bukkitmigration.UUIDFetcher;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 
 public class ModReq extends JavaPlugin {
     ModReqListener listener = new ModReqListener(this);
@@ -70,27 +81,170 @@ public class ModReq extends JavaPlugin {
     }
 
     public void resetDatabase() {
-        List<Request> reqs = reqTable.getRequestPage(0, 1000, true, null, RequestStatus.OPEN, RequestStatus.CLAIMED);
-        
-        removeDDL();
-        
-        if (setupDatabase()) {
-        
-            for (Request r : reqs) {
-                Request req = new Request();
-                req.setPlayerName(r.getPlayerName());
-                req.setRequest(r.getRequest());
-                req.setRequestTime(r.getRequestTime());
-                req.setRequestLocation(r.getRequestLocation());
-                req.setStatus(r.getStatus());
-                if (r.getStatus() == RequestStatus.CLAIMED) {
-                    req.setAssignedMod(r.getAssignedMod());
-                }
-                req.setFlagForAdmin(r.isFlagForAdmin());
+        getLogger().log(Level.INFO, "Resetting database");
 
-                reqTable.save(req);
-            }
+        getLogger().log(Level.INFO, "Backup up existing data into memory");
+		List<SqlRow> rowRequests = getDatabase().createSqlQuery("SELECT id, player_name, assigned_mod, request, request_time, status, request_location, close_message, close_time, close_seen_by_user, flag_for_admin FROM modreq_requests").findList();
+		List<SqlRow> rowNotes = getDatabase().createSqlQuery("SELECT id, player, request_id, note_body FROM modreq_notes").findList();
+		
+        List<Request> reqs = new ArrayList<Request>();
+		List<Note> notes = new ArrayList<Note>();
+		Set<String> unknownNames = new HashSet<String>();
+        
+        getLogger().log(Level.INFO, "Executing remove ddl");
+        removeDDL();
+
+        if (setupDatabase()) {
+            getLogger().log(Level.INFO, "Schema created, converting " + rowRequests.size() + " requests and " + rowNotes.size() + " notes");
+			for (SqlRow row : rowRequests) {
+                Request req = new Request();
+                req.setId(row.getInteger("id"));
+				if (row.containsKey("player_uuid"))
+					req.setPlayerUUID(row.getUUID("player_uuid"));
+                req.setPlayerName(row.getString("player_name"));
+                req.setRequest(row.getString("request"));
+                req.setRequestTime(row.getInteger("request_time"));
+                req.setRequestLocation(row.getString("request_location"));
+                req.setStatus(RequestStatus.values()[row.getInteger("status")]);
+                if (req.getStatus() == RequestStatus.CLAIMED) {
+					if (row.containsKey("assigned_mod_uuid"))
+						req.setAssignedModUUID(row.getUUID("assigned_mod_uuid"));
+                }
+                req.setAssignedMod(row.getString("assigned_mod"));
+                req.setFlagForAdmin(row.getBoolean("flag_for_admin"));
+
+				if (req.getPlayerUUID() == null && req.getPlayerName() != null) {
+					unknownNames.add(req.getPlayerName());
+				}
+				if (req.getAssignedModUUID() == null && req.getAssignedMod() != null) {
+					unknownNames.add(req.getAssignedMod());
+				}
+
+				reqs.add(req);
+			}
+
+			for (SqlRow row : rowNotes) {
+				Note note = new Note();
+				note.setId(row.getInteger("id"));
+				note.setPlayer(row.getString("player"));
+				note.setRequestId(row.getInteger("request_id"));
+				note.setNoteBody(row.getString("note_body"));
+
+				if (note.getPlayerUUID() == null && note.getPlayer() != null) {
+					unknownNames.add(note.getPlayer());
+				}
+
+				notes.add(note);
+			}
+
+			if (unknownNames.size() > 0) {
+                getLogger().log(Level.INFO, "Fetching " + unknownNames.size() + " UUIDs");
+				try {
+					List<String> names = new ArrayList<String>(unknownNames);
+					UUIDFetcher fetcher = new UUIDFetcher(names);
+					Map<String, UUID> responses = fetcher.call();
+
+					List<String> namesChanged = new ArrayList<String>();
+					for (String name : names) {
+						if (!responses.containsKey(name)) {
+							namesChanged.add(name);
+						}
+					}
+					getLogger().log(Level.INFO, "Failed to lookup " + namesChanged.size() + " uuids, querying for history");
+					final JSONParser jsonParser = new JSONParser();
+					int i = 0;
+					for (String name : namesChanged) {
+						try {
+							URL url = new URL("https://api.mojang.com/users/profiles/minecraft/" + name + "?at=1422774069");
+							HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+							connection.setRequestProperty("Content-Type", "application/json");
+							connection.setUseCaches(false);
+							connection.setDoInput(true);
+							connection.setDoOutput(true);
+
+							JSONObject profile = (JSONObject) jsonParser.parse(new InputStreamReader(connection.getInputStream()));
+							String nameNew = (String) profile.get("name");
+							String uuidStringNoDash = (String) profile.get("id");
+							String uuidString =  uuidStringNoDash.replaceFirst( "(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}+)", "$1-$2-$3-$4-$5" );
+							UUID uuid = UUID.fromString(uuidString);
+							responses.put(name, uuid);
+	//						getLogger().info("New Name = " + nameNew + " UUID = " + uuid);
+						}
+						catch (Exception e) {
+							getLogger().log(Level.INFO, "Failed to fetch historical uuid for " + name);
+						}
+
+						i++;
+						if (i > 600)
+							Thread.sleep(100L);
+					}
+
+					for (Map.Entry<String, UUID> response : responses.entrySet()) {
+						for (Request req : reqs) {
+							if (req.getPlayerName() != null && req.getPlayerName().equalsIgnoreCase(response.getKey())) {
+								req.setPlayerUUID(response.getValue());
+							}
+							if (req.getAssignedMod() != null && req.getAssignedMod().equalsIgnoreCase(response.getKey())) {
+								req.setAssignedModUUID(response.getValue());
+							}
+						}
+
+						for (Note note : notes) {
+							if (note.getPlayer() != null && note.getPlayer().equalsIgnoreCase(response.getKey())) {
+								note.setPlayerUUID(response.getValue());
+							}
+						}
+					}
+				}
+				catch (Exception e) {
+					getLogger().log(Level.SEVERE, "Failed to fetch uuids", e);
+				}
+			}
+
+			getLogger().log(Level.INFO, "Saving " + reqs.size() + " reqs");
+			int i = 0;
+			for (Request req : reqs) {
+				try {
+					i++;
+
+					reqTable.save(req);
+
+					if (i % 1000 == 0) {
+						getLogger().info("Saved " + i + " of " + reqs.size() + " reqs");
+						Thread.sleep(1000L);
+					}
+				}
+				catch (Exception e)
+				{
+					getLogger().log(Level.SEVERE, "Failed to save ModReq id=" + req.getId() + " player=" + req.getPlayerName());
+					getLogger().log(Level.SEVERE, e.getMessage());
+				}
+			}
+			getLogger().info("Saved " + i + " of " + reqs.size() + " reqs");
+
+
+			getLogger().log(Level.INFO, "Saving " + notes.size() + " notes");
+			i = 0;
+			for (Note note : notes) {
+				try {
+					i++;
+
+					noteTable.save(note);
+
+					if (i % 1000 == 0) {
+						getLogger().info("Saved " + i + " of " + notes.size() + " notes");
+						Thread.sleep(1000L);
+					}
+				}
+				catch (Exception e)
+				{
+					getLogger().log(Level.SEVERE, "Failed to save note id=" + note.getId() + " player=" + note.getPlayer());
+					getLogger().log(Level.SEVERE, e.getMessage());
+				}
+			}
+			getLogger().info("Saved " + i + " of " + notes.size() + " notes");
         }
+        getLogger().log(Level.INFO, "Done");
     }
 
     @Override
@@ -105,6 +259,12 @@ public class ModReq extends JavaPlugin {
     public boolean onCommand(CommandSender sender, Command command, String name, String[] args) {
         boolean includeElevated = sender.hasPermission("modreq.cleardb");
         String senderName = ChatColor.stripColor(sender.getName());
+		UUID senderUUID = null;
+		Player player = null;
+		if (sender instanceof Player) {
+			player = (Player)sender;
+			senderUUID = player.getUniqueId();
+		}
         environment.clear();
         if (sender instanceof ConsoleCommandSender) {
             senderName = "Console";
@@ -120,10 +280,9 @@ public class ModReq extends JavaPlugin {
             }
             
             if (sender instanceof Player) {
-                Player player = (Player)sender;
-                
-                if (reqTable.getNumRequestFromUser(senderName) < config.MAX_REQUESTS) {
+                if (reqTable.getNumRequestFromUser(player.getUniqueId()) < config.MAX_REQUESTS) {
                     Request req = new Request();
+					req.setPlayerUUID(player.getUniqueId());
                     req.setPlayerName(senderName);
                     String r = ChatColor.translateAlternateColorCodes('&', request.toString());
                     r = ChatColor.stripColor(r);
@@ -149,7 +308,7 @@ public class ModReq extends JavaPlugin {
             int requestId = 0;
             int totalRequests = 0;
             String searchTerm = null;
-            String limitName = null;
+			UUID limitUUID = null;
             boolean showNotes = true;
             
             for (int i = 0; i < args.length; i++) {
@@ -199,15 +358,17 @@ public class ModReq extends JavaPlugin {
             }
             
             if (!sender.hasPermission("modreq.check")) {
-                limitName = senderName;
+				if (sender instanceof Player) {
+					limitUUID = senderUUID;
+				}
                 showNotes = false;
             }
             
             List<Request> requests = new ArrayList<Request>();
             
             if (page > 0) {
-                if (limitName != null) {
-                    requests.addAll(reqTable.getUserRequests(limitName));
+                if (limitUUID != null) {
+                    requests.addAll(reqTable.getUserRequests(limitUUID));
                     totalRequests = requests.size();
                 } else {
                     requests.addAll(reqTable.getRequestPage(page - 1, 5, includeElevated, searchTerm, RequestStatus.OPEN, RequestStatus.CLAIMED));
@@ -219,9 +380,9 @@ public class ModReq extends JavaPlugin {
                 
                 if (req != null) {
                     totalRequests = 1;
-                    if (limitName != null && req.getPlayerName().equalsIgnoreCase(limitName)) {
+                    if (limitUUID != null && req.getPlayerUUID().equals(limitUUID)) {
                         requests.add(req);
-                    } else if (limitName == null) {
+                    } else if (limitUUID == null) {
                         requests.add(req);
                     } else {
                         totalRequests = 0;
@@ -232,7 +393,7 @@ public class ModReq extends JavaPlugin {
             }
             
             if (totalRequests == 0) {
-                if (limitName != null) {
+                if (limitUUID != null) {
                     if (requestId > 0) {
                         sendMessage(sender, config.GENERAL__REQUEST_ERROR);
                     }
@@ -246,11 +407,11 @@ public class ModReq extends JavaPlugin {
             } else if (totalRequests == 1 && requestId > 0) {
                 messageRequestToPlayer(sender, requests.get(0), showNotes);
             } else if (totalRequests > 0) {
-                if (page > 1 && requests.size() == 0) {
+                if (page > 1 && requests.isEmpty()) {
                     sendMessage(sender, config.MOD__EMPTY_PAGE);
                 } else {
                     boolean showPage = true;
-                    if (limitName != null) {
+                    if (limitUUID != null) {
                         showPage = false;
                     }
                     messageRequestListToPlayer(sender, requests, page, totalRequests, showPage);
@@ -268,7 +429,6 @@ public class ModReq extends JavaPlugin {
                 requestId = Integer.parseInt(args[0]);
                 
                 if (sender instanceof Player) {
-                    Player player = (Player)sender;
                     Request req = reqTable.getRequest(requestId);
                     if (req != null) {
                         environment.put("request_id", String.valueOf(req.getId()));
@@ -294,11 +454,11 @@ public class ModReq extends JavaPlugin {
                 requestId = Integer.parseInt(args[0]);
                 
                 if (sender instanceof Player) {
-                    Player player = (Player)sender;
                     Request req = reqTable.getRequest(requestId);
                     
                     if (req.getStatus() == RequestStatus.OPEN) {
                         req.setStatus(RequestStatus.CLAIMED);
+						req.setAssignedModUUID(senderUUID);
                         req.setAssignedMod(senderName);
                         reqTable.save(req);
                         
@@ -324,10 +484,10 @@ public class ModReq extends JavaPlugin {
                 requestId = Integer.parseInt(args[0]);
                 
                 if (sender instanceof Player) {
-                    Player player = (Player)sender;
                     Request req = reqTable.getRequest(requestId);
                     if (req.getAssignedMod().equalsIgnoreCase(senderName) && req.getStatus() == RequestStatus.CLAIMED) {
                         req.setStatus(RequestStatus.OPEN);
+                        req.setAssignedModUUID(null);
                         req.setAssignedMod(null);
                         reqTable.save(req);
                         
@@ -353,7 +513,7 @@ public class ModReq extends JavaPlugin {
             try {
                 requestId = Integer.parseInt(args[0]);
                 
-                String doneMessage = null;
+                String doneMessage = "";
                 
                 if (args.length > 1) {
                     StringBuilder doneMessageBuilder = new StringBuilder(args[1]);
@@ -387,21 +547,22 @@ public class ModReq extends JavaPlugin {
                         }
                     }
                     else {
-                        if (!req.getPlayerName().equalsIgnoreCase(senderName)) {
-                            req = null;
-                            sendMessage(sender, config.GENERAL__CLOSE_ERROR);
-                        }
+						if (req.getPlayerUUID() != null && !req.getPlayerUUID().equals(senderUUID)) {
+							req = null;
+							sendMessage(sender, config.GENERAL__CLOSE_ERROR);
+						}
                     }
 
                     if (req != null) {
                         req.setStatus(RequestStatus.CLOSED);
                         req.setCloseTime(System.currentTimeMillis());
                         req.setCloseMessage(doneMessage);
+                        req.setAssignedModUUID(senderUUID);
                         req.setAssignedMod(senderName);
 
                         Player requestCreator = getServer().getPlayerExact(req.getPlayerName());
                         if (requestCreator != null) {
-                            if (!requestCreator.getName().equalsIgnoreCase(senderName)) {
+                            if (!requestCreator.getUniqueId().equals(senderUUID)) {
                                 String message = "";
                                 environment.put("close_message", doneMessage);
                                 environment.put("mod", senderName);
@@ -447,10 +608,10 @@ public class ModReq extends JavaPlugin {
                 requestId = Integer.parseInt(args[0]);
                 
                 if (sender instanceof Player) {
-                    Player player = (Player)sender;
                     Request req = reqTable.getRequest(requestId);
-                    if ((req.getAssignedMod().equalsIgnoreCase(senderName) && req.getStatus() == RequestStatus.CLAIMED) || req.getStatus() == RequestStatus.CLOSED) {
+                    if ((req.getAssignedModUUID().equals(senderUUID) && req.getStatus() == RequestStatus.CLAIMED) || req.getStatus() == RequestStatus.CLOSED) {
                         req.setStatus(RequestStatus.OPEN);
+						req.setAssignedModUUID(null);
                         req.setAssignedMod(null);
                         req.setCloseSeenByUser(false);
                         reqTable.save(req);
@@ -547,7 +708,8 @@ public class ModReq extends JavaPlugin {
                     
                     Note note = new Note();
                     note.setNoteBody(noteBody.toString());
-                    note.setPlayer(sender.getName());
+					note.setPlayerUUID(senderUUID);
+                    note.setPlayer(senderName);
                     note.setRequestId(reqId);
                     noteTable.save(note);
                     
@@ -556,7 +718,45 @@ public class ModReq extends JavaPlugin {
                     environment.remove("request_id");
                 }
             }
-        }
+        } else if ( command.getName().equalsIgnoreCase("mr-upgrade")) {
+            if (sender.hasPermission("modreq.upgrade")) {
+//				getLogger().log(Level.INFO, "Upgrading database");
+
+//				try {
+//					SqlUpdate update = getDatabase().createSqlUpdate("ALTER TABLE modreq_requests ADD COLUMN player_uuid VARCHAR(40)");
+//					getDatabase().execute(update);
+//					getLogger().log(Level.INFO, "Created player_uuid column on modreq_requests table");
+//				} catch (PersistenceException e) {
+//					// Column already exists
+//				}
+//
+//				try {
+//					SqlUpdate update = getDatabase().createSqlUpdate("ALTER TABLE modreq_requests ADD COLUMN assigned_mod_uuid VARCHAR(40)");
+//					getDatabase().execute(update);
+//					getLogger().log(Level.INFO, "Created assigned_mod_uuid column on modreq_requests table");
+//				} catch (PersistenceException e) {
+//					// Column already exists
+//				}
+//
+//				try {
+//					SqlUpdate update = getDatabase().createSqlUpdate("ALTER TABLE modreq_notes ADD COLUMN player_uuid VARCHAR(40)");
+//					getDatabase().execute(update);
+//					getLogger().log(Level.INFO, "Created player_uuid column on modreq_notes table");
+//				} catch (PersistenceException e) {
+//					// Column already exists
+//				}
+//
+//				getDatabase().externalModification(name, includeElevated, includeElevated, includeElevated);
+
+				BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
+				scheduler.scheduleSyncDelayedTask(this, new Runnable() {
+					@Override
+					public void run() {
+						resetDatabase();
+					}
+				}, 0L);
+			}
+		}
 
         return true;
     }

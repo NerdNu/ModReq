@@ -4,10 +4,9 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import org.bukkit.Location;
-
 import com.avaje.ebean.validation.NotEmpty;
 import com.avaje.ebean.validation.NotNull;
+import java.util.UUID;
 
 @Entity()
 @Table(name = "modreq_requests")
@@ -21,7 +20,11 @@ public class Request {
     private int id;
 
     @NotNull
+    private UUID playerUUID;
+    @NotNull
     private String playerName;
+
+    private UUID assignedModUUID;
     private String assignedMod;
 
     @NotEmpty
@@ -48,6 +51,14 @@ public class Request {
         return this.id;
     }
 
+	public void setPlayerUUID(UUID playerUUID) {
+		this.playerUUID = playerUUID;
+	}
+	
+	public UUID getPlayerUUID() {
+		return this.playerUUID;
+	}
+
     public void setPlayerName(String playerName) {
         this.playerName = playerName;
     }
@@ -55,6 +66,14 @@ public class Request {
     public String getPlayerName() {
         return this.playerName;
     }
+
+	public void setAssignedModUUID(UUID assignedModUUID) {
+		this.assignedModUUID = assignedModUUID;
+	}
+	
+	public UUID getAssignedModUUID() {
+		return this.assignedModUUID;
+	}
 
     public void setAssignedMod(String assignedMod) {
         this.assignedMod = assignedMod;

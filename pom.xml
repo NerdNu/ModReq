@@ -1,9 +1,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>nu.nerd</groupId>
 	<artifactId>ModReq</artifactId>
-	<version>1.5</version>
+	<version>1.6</version>
 	<packaging>jar</packaging>
 	<name>ModReq</name>
 	<properties>
@@ -16,6 +16,11 @@
 			<version>1.7.10-R0.1-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.gestern</groupId>
+			<artifactId>bukkit-migration-tools</artifactId>
+			<version>0.1</version>
 		</dependency>
 	</dependencies>
 	<distributionManagement>
@@ -35,6 +40,11 @@
 		<repository>
 			<id>repobo-snap</id>
 			<url>http://repo.bukkit.org/content/groups/public</url>
+		</repository>
+		<repository>
+			<id>znode-releases</id>
+			<name>znode-releases</name>
+			<url>http://repo.zno.de/artifactory/libs-release-local</url>
 		</repository>
 	</repositories>
 
@@ -91,5 +101,29 @@
 				</plugin>
 			</plugins>
 		</pluginManagement>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>2.2</version>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+						<configuration>
+							<shadedArtifactAttached>false</shadedArtifactAttached>
+							<shadedClassifierName>Bundle</shadedClassifierName>
+							<artifactSet>
+								<includes>
+									<include>org.gestern:bukkit-migration-tools:jar:*</include>
+								</includes>
+							</artifactSet>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
 	</build>
 </project>

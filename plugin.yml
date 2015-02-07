@@ -60,6 +60,11 @@ commands:
     permission: modreq.mod
     usage: |
            /<command> <add|remove> <#> <body|note-id>
+  mr-upgrade:
+    description: Upgrade the database
+    permission: modreq.upgrade
+    usage: |
+           /<command>
 
 permissions:
   modreq:
@@ -80,6 +85,8 @@ permissions:
             description: Allow a player to receive modreq broadcasts
   modreq.cleardb:
     description: Allow a player to clear the database.
+  modreq.upgrade:
+    description: Upgrade the database
   modreq.request:
     description: Allow a player to submit a request
     default: true
