@@ -17,7 +17,7 @@ public class NoteTable {
     public List<Note> getRequestNotes(Request request) {
         List<Note> requestNotes = new ArrayList<Note>();
         
-        Query<Note> query = parent.getDatabase().find(Note.class).where()
+        Query<Note> query = parent.getPluginDatabase().find(Note.class).where()
                 .eq("requestId", request.getId())
                 .query();
         
@@ -30,16 +30,16 @@ public class NoteTable {
 
     public int getNoteCount(Request request) {
 
-        return parent.getDatabase().find(Note.class).where()
+        return parent.getPluginDatabase().find(Note.class).where()
                 .eq("requestId", request.getId()).findRowCount();
     }
     
     public void remove(Note note) {
-        parent.getDatabase().delete(note);
+        parent.getPluginDatabase().delete(note);
     }
     
     public void save(Note note) {
-        parent.getDatabase().save(note);
+        parent.getPluginDatabase().save(note);
     }
     
 }

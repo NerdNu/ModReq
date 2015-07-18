@@ -42,3 +42,8 @@ colour:
   online: "&A"
   offline: "&C"
 max-requests: 5
+database:
+  username: "root"
+  password: ""
+  uri: "jdbc:mysql://127.0.0.1:3306/modreq"
+  class: "com.mysql.jdbc.Driver"

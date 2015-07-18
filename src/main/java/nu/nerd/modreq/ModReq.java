@@ -1,21 +1,23 @@
 package nu.nerd.modreq;
 
-import com.avaje.ebean.SqlRow;
+import com.avaje.ebean.EbeanServer;
+import com.avaje.ebean.EbeanServerFactory;
+import com.avaje.ebean.LogLevel;
+import com.avaje.ebean.config.DataSourceConfig;
+import com.avaje.ebean.config.ServerConfig;
+import com.avaje.ebeaninternal.api.SpiEbeanServer;
+import com.avaje.ebeaninternal.server.ddl.DdlGenerator;
 import java.io.File;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
-
+import java.util.logging.Logger;
 import javax.persistence.PersistenceException;
 import nu.nerd.modreq.database.Note;
 import nu.nerd.modreq.database.NoteTable;
@@ -23,7 +25,6 @@ import nu.nerd.modreq.database.NoteTable;
 import nu.nerd.modreq.database.Request;
 import nu.nerd.modreq.database.Request.RequestStatus;
 import nu.nerd.modreq.database.RequestTable;
-import org.bukkit.Bukkit;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -33,22 +34,18 @@ import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permissible;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitScheduler;
-import org.gestern.bukkitmigration.UUIDFetcher;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 
 public class ModReq extends JavaPlugin {
     ModReqListener listener = new ModReqListener(this);
     Configuration config = new Configuration(this);
     Map<String, String> environment = new HashMap<String, String>();
-
+    EbeanServer pluginDatabase = null;
     RequestTable reqTable;
     NoteTable noteTable;
     
     @Override
     public void onEnable() {
-        setupDatabase();
+        createDatabase();
         File configFile = new File(this.getDataFolder(), "config.yml");
         if (!configFile.exists()) {
             getConfig().options().copyDefaults(true);
@@ -56,7 +53,6 @@ public class ModReq extends JavaPlugin {
         }
         
         config.load();
-        
         reqTable = new RequestTable(this);
         noteTable = new NoteTable(this);
         getServer().getPluginManager().registerEvents(listener, this);
@@ -64,197 +60,75 @@ public class ModReq extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        // tear down
     }
-
-    public boolean setupDatabase() {
+    
+    private void testTables() {
         try {
-            getDatabase().find(Request.class).findRowCount();
-            getDatabase().find(Note.class).findRowCount();
+            getPluginDatabase().find(Request.class).findRowCount();
+            getPluginDatabase().find(Note.class).findRowCount();
         } catch (PersistenceException ex) {
             getLogger().log(Level.INFO, "First run, initializing database.");
-            installDDL();
-            return true;
+            SpiEbeanServer serv = (SpiEbeanServer) getPluginDatabase();
+            DdlGenerator gen = serv.getDdlGenerator();
+
+            gen.runScript(false, gen.generateCreateDdl());
+        }
+    }
+    
+    private void createDatabase() {
+        ServerConfig db = new ServerConfig();
+        db.setName(getDescription().getName());
+        // Verbose logging
+        db.setDebugSql(true);
+        db.setLoggingLevel(LogLevel.SQL);
+        
+        DataSourceConfig ds = db.getDataSourceConfig();
+        ds.setDriver(config.DATABASE__CLASS);
+        if (!config.DATABASE__USERNAME.equals("")) {
+            ds.setUsername(config.DATABASE__USERNAME);
+            ds.setPassword(config.DATABASE__PASSWORD);
+        }
+        ds.setUrl(config.DATABASE__URI);
+        db.setDataSourceConfig(ds);
+        
+//        db.setDdlGenerate(true);
+//        db.setDdlRun(true);   
+        
+        db.setDefaultServer(false);
+        db.setRegister(true);
+        
+        try {
+            this.getClassLoader().loadClass("nu.nerd.modreq.database.Note");
+            this.getClassLoader().loadClass("nu.nerd.modreq.database.Request");
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(ModReq.class.getName()).log(Level.SEVERE, null, ex);
         }
         
-        return false;
-    }
-
-    public void resetDatabase() {
-        getLogger().log(Level.INFO, "Resetting database");
-
-        getLogger().log(Level.INFO, "Backup up existing data into memory");
-		List<SqlRow> rowRequests = getDatabase().createSqlQuery("SELECT id, player_name, assigned_mod, request, request_time, status, request_location, close_message, close_time, close_seen_by_user, flag_for_admin FROM modreq_requests").findList();
-		List<SqlRow> rowNotes = getDatabase().createSqlQuery("SELECT id, player, request_id, note_body FROM modreq_notes").findList();
-		
-        List<Request> reqs = new ArrayList<Request>();
-		List<Note> notes = new ArrayList<Note>();
-		Set<String> unknownNames = new HashSet<String>();
         
-        getLogger().log(Level.INFO, "Executing remove ddl");
-        removeDDL();
-
-        if (setupDatabase()) {
-            getLogger().log(Level.INFO, "Schema created, converting " + rowRequests.size() + " requests and " + rowNotes.size() + " notes");
-			for (SqlRow row : rowRequests) {
-                Request req = new Request();
-                req.setId(row.getInteger("id"));
-				if (row.containsKey("player_uuid"))
-					req.setPlayerUUID(row.getUUID("player_uuid"));
-                req.setPlayerName(row.getString("player_name"));
-                req.setRequest(row.getString("request"));
-                req.setRequestTime(row.getInteger("request_time"));
-                req.setRequestLocation(row.getString("request_location"));
-                req.setStatus(RequestStatus.values()[row.getInteger("status")]);
-                if (req.getStatus() == RequestStatus.CLAIMED) {
-					if (row.containsKey("assigned_mod_uuid"))
-						req.setAssignedModUUID(row.getUUID("assigned_mod_uuid"));
-                }
-                req.setAssignedMod(row.getString("assigned_mod"));
-                req.setFlagForAdmin(row.getBoolean("flag_for_admin"));
-
-				if (req.getPlayerUUID() == null && req.getPlayerName() != null) {
-					unknownNames.add(req.getPlayerName());
-				}
-				if (req.getAssignedModUUID() == null && req.getAssignedMod() != null) {
-					unknownNames.add(req.getAssignedMod());
-				}
-
-				reqs.add(req);
-			}
-
-			for (SqlRow row : rowNotes) {
-				Note note = new Note();
-				note.setId(row.getInteger("id"));
-				note.setPlayer(row.getString("player"));
-				note.setRequestId(row.getInteger("request_id"));
-				note.setNoteBody(row.getString("note_body"));
-
-				if (note.getPlayerUUID() == null && note.getPlayer() != null) {
-					unknownNames.add(note.getPlayer());
-				}
-
-				notes.add(note);
-			}
-
-			if (unknownNames.size() > 0) {
-                getLogger().log(Level.INFO, "Fetching " + unknownNames.size() + " UUIDs");
-				try {
-					List<String> names = new ArrayList<String>(unknownNames);
-					UUIDFetcher fetcher = new UUIDFetcher(names);
-					Map<String, UUID> responses = fetcher.call();
-
-					List<String> namesChanged = new ArrayList<String>();
-					for (String name : names) {
-						if (!responses.containsKey(name)) {
-							namesChanged.add(name);
-						}
-					}
-					getLogger().log(Level.INFO, "Failed to lookup " + namesChanged.size() + " uuids, querying for history");
-					final JSONParser jsonParser = new JSONParser();
-					int i = 0;
-					for (String name : namesChanged) {
-						try {
-							URL url = new URL("https://api.mojang.com/users/profiles/minecraft/" + name + "?at=1422774069");
-							HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-							connection.setRequestProperty("Content-Type", "application/json");
-							connection.setUseCaches(false);
-							connection.setDoInput(true);
-							connection.setDoOutput(true);
-
-							JSONObject profile = (JSONObject) jsonParser.parse(new InputStreamReader(connection.getInputStream()));
-							String nameNew = (String) profile.get("name");
-							String uuidStringNoDash = (String) profile.get("id");
-							String uuidString =  uuidStringNoDash.replaceFirst( "(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}+)", "$1-$2-$3-$4-$5" );
-							UUID uuid = UUID.fromString(uuidString);
-							responses.put(name, uuid);
-	//						getLogger().info("New Name = " + nameNew + " UUID = " + uuid);
-						}
-						catch (Exception e) {
-							getLogger().log(Level.INFO, "Failed to fetch historical uuid for " + name);
-						}
-
-						i++;
-						if (i > 600)
-							Thread.sleep(100L);
-					}
-
-					for (Map.Entry<String, UUID> response : responses.entrySet()) {
-						for (Request req : reqs) {
-							if (req.getPlayerName() != null && req.getPlayerName().equalsIgnoreCase(response.getKey())) {
-								req.setPlayerUUID(response.getValue());
-							}
-							if (req.getAssignedMod() != null && req.getAssignedMod().equalsIgnoreCase(response.getKey())) {
-								req.setAssignedModUUID(response.getValue());
-							}
-						}
-
-						for (Note note : notes) {
-							if (note.getPlayer() != null && note.getPlayer().equalsIgnoreCase(response.getKey())) {
-								note.setPlayerUUID(response.getValue());
-							}
-						}
-					}
-				}
-				catch (Exception e) {
-					getLogger().log(Level.SEVERE, "Failed to fetch uuids", e);
-				}
-			}
-
-			getLogger().log(Level.INFO, "Saving " + reqs.size() + " reqs");
-			int i = 0;
-			for (Request req : reqs) {
-				try {
-					i++;
-
-					reqTable.save(req);
-
-					if (i % 1000 == 0) {
-						getLogger().info("Saved " + i + " of " + reqs.size() + " reqs");
-						Thread.sleep(1000L);
-					}
-				}
-				catch (Exception e)
-				{
-					getLogger().log(Level.SEVERE, "Failed to save ModReq id=" + req.getId() + " player=" + req.getPlayerName());
-					getLogger().log(Level.SEVERE, e.getMessage());
-				}
-			}
-			getLogger().info("Saved " + i + " of " + reqs.size() + " reqs");
-
-
-			getLogger().log(Level.INFO, "Saving " + notes.size() + " notes");
-			i = 0;
-			for (Note note : notes) {
-				try {
-					i++;
-
-					noteTable.save(note);
-
-					if (i % 1000 == 0) {
-						getLogger().info("Saved " + i + " of " + notes.size() + " notes");
-						Thread.sleep(1000L);
-					}
-				}
-				catch (Exception e)
-				{
-					getLogger().log(Level.SEVERE, "Failed to save note id=" + note.getId() + " player=" + note.getPlayer());
-					getLogger().log(Level.SEVERE, e.getMessage());
-				}
-			}
-			getLogger().info("Saved " + i + " of " + notes.size() + " notes");
-        }
-        getLogger().log(Level.INFO, "Done");
-    }
-
-    @Override
-    public ArrayList<Class<?>> getDatabaseClasses() {
         ArrayList<Class<?>> list = new ArrayList<Class<?>>();
-        list.add(Request.class);
         list.add(Note.class);
-        return list;
-    }
+        list.add(Request.class);
+        db.setClasses(list);
 
+        try {
+            ClassLoader previous = Thread.currentThread().getContextClassLoader();
+            Thread.currentThread().setContextClassLoader(this.getClassLoader());
+            pluginDatabase = EbeanServerFactory.create(db);
+            Thread.currentThread().setContextClassLoader(previous);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+//        SpiEbeanServer serv = (SpiEbeanServer) pluginDatabase;
+//        DdlGenerator gen = serv.getDdlGenerator();
+//
+//        gen.runScript(false, gen.generateCreateDdl());
+        
+    }
+    
+    public EbeanServer getPluginDatabase() {
+        return pluginDatabase;
+    }
+    
     @Override
     public boolean onCommand(CommandSender sender, Command command, String name, String[] args) {
         boolean includeElevated = sender.hasPermission("modreq.cleardb");
@@ -648,13 +522,13 @@ public class ModReq extends JavaPlugin {
             catch (NumberFormatException ex) {
                 sendMessage(sender, config.GENERAL__REQUEST_NUMBER);
             }
-        } else if ( command.getName().equalsIgnoreCase("mr-reset")) {
-            try {
-                resetDatabase();
-                sendMessage(sender, config.MOD__RESET);
-            } catch (Exception ex) {
-                getLogger().log(Level.WARNING, "Failed to reset database", ex);
-            }
+//        } else if ( command.getName().equalsIgnoreCase("mr-reset")) {
+//            try {
+//                resetDatabase();
+//                sendMessage(sender, config.MOD__RESET);
+//            } catch (Exception ex) {
+//                getLogger().log(Level.WARNING, "Failed to reset database", ex);
+//            }
         } else if ( command.getName().equalsIgnoreCase("mr-note")) {
             if (args.length < 3) {
                 return false;
@@ -748,13 +622,13 @@ public class ModReq extends JavaPlugin {
 //
 //				getDatabase().externalModification(name, includeElevated, includeElevated, includeElevated);
 
-				BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
-				scheduler.scheduleSyncDelayedTask(this, new Runnable() {
-					@Override
-					public void run() {
-						resetDatabase();
-					}
-				}, 0L);
+//				BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
+//				scheduler.scheduleSyncDelayedTask(this, new Runnable() {
+//					@Override
+//					public void run() {
+//						resetDatabase();
+//					}
+//				}, 0L);
 			}
 		}
 

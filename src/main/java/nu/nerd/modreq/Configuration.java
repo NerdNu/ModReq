@@ -8,6 +8,11 @@ package nu.nerd.modreq;
 public class Configuration {
     private ModReq plugin;
     
+    public String DATABASE__URI;
+    public String DATABASE__CLASS;
+    public String DATABASE__USERNAME;
+    public String DATABASE__PASSWORD;
+    
     public String GENERAL__PAGE_ERROR;
     public String GENERAL__SEARCH_ERROR;
     public String GENERAL__REQUEST_NUMBER;
@@ -48,6 +53,7 @@ public class Configuration {
     
     public Configuration(ModReq plugin) {
         this.plugin = plugin;
+        this.load();
     }
     
     public void save() {
@@ -56,6 +62,10 @@ public class Configuration {
     
     public void load() {
         plugin.reloadConfig();
+        DATABASE__URI = plugin.getConfig().getString("database.uri");
+        DATABASE__CLASS = plugin.getConfig().getString("database.class");
+        DATABASE__USERNAME = plugin.getConfig().getString("database.username");
+        DATABASE__PASSWORD = plugin.getConfig().getString("database.password");
         
         GENERAL__REQUEST_NUMBER = plugin.getConfig().getString("messages.general.request-number");
         GENERAL__REQUEST_FILED = plugin.getConfig().getString("messages.general.request-filed");

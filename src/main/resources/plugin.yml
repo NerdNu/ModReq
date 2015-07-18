@@ -1,7 +1,6 @@
 name: ModReq
 version: ${project.version}
 description: ${project.description}
-database: true
 
 authors: [Travis Watkins, Deaygo Jarkko]
 website: ${project.url}

@@ -3,7 +3,6 @@ package nu.nerd.modreq.database;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
-
 import com.avaje.ebean.validation.NotEmpty;
 import com.avaje.ebean.validation.NotNull;
 import java.util.UUID;
