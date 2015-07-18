@@ -19,6 +19,8 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.persistence.PersistenceException;
+import nu.nerd.modreq.command.C_check;
+import nu.nerd.modreq.command.C_modreq;
 import nu.nerd.modreq.database.Note;
 import nu.nerd.modreq.database.NoteTable;
 
@@ -36,16 +38,17 @@ import org.bukkit.permissions.Permissible;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class ModReq extends JavaPlugin {
-    ModReqListener listener = new ModReqListener(this);
-    Configuration config = new Configuration(this);
-    Map<String, String> environment = new HashMap<String, String>();
-    EbeanServer pluginDatabase = null;
-    RequestTable reqTable;
-    NoteTable noteTable;
+    private ModReqListener listener = new ModReqListener(this);
+    private Configuration config = new Configuration(this);
+    public Map<String, String> environment = new HashMap<String, String>();
+    private EbeanServer pluginDatabase = null;
+    private RequestTable reqTable;
+    private NoteTable noteTable;
     
     @Override
     public void onEnable() {
         createDatabase();
+        testTables();
         File configFile = new File(this.getDataFolder(), "config.yml");
         if (!configFile.exists()) {
             getConfig().options().copyDefaults(true);
@@ -55,6 +58,10 @@ public class ModReq extends JavaPlugin {
         config.load();
         reqTable = new RequestTable(this);
         noteTable = new NoteTable(this);
+        
+        getCommand("modreq").setExecutor(new C_modreq(this));
+        getCommand("check").setExecutor(new C_check(this));
+        
         getServer().getPluginManager().registerEvents(listener, this);
     }
 
@@ -116,6 +123,7 @@ public class ModReq extends JavaPlugin {
             pluginDatabase = EbeanServerFactory.create(db);
             Thread.currentThread().setContextClassLoader(previous);
         } catch (Exception e) {
+            this.getPluginLoader().disablePlugin(this);
             e.printStackTrace();
         }
 //        SpiEbeanServer serv = (SpiEbeanServer) pluginDatabase;
@@ -125,176 +133,40 @@ public class ModReq extends JavaPlugin {
         
     }
     
+    public Configuration getPluginConfig() {
+        return config;
+    }
+    
     public EbeanServer getPluginDatabase() {
         return pluginDatabase;
+    }
+    
+    public RequestTable getRequestTable() {
+        return reqTable;
+    }
+    public NoteTable getNoteTable() {
+        return noteTable;
+    }
+    public String getServerName() {
+        return this.getServer().getServerName();
     }
     
     @Override
     public boolean onCommand(CommandSender sender, Command command, String name, String[] args) {
         boolean includeElevated = sender.hasPermission("modreq.cleardb");
         String senderName = ChatColor.stripColor(sender.getName());
-		UUID senderUUID = null;
-		Player player = null;
-		if (sender instanceof Player) {
-			player = (Player)sender;
-			senderUUID = player.getUniqueId();
-		}
+        UUID senderUUID = null;
+        Player player = null;
+        if (sender instanceof Player) {
+            player = (Player)sender;
+            senderUUID = player.getUniqueId();
+        }
         environment.clear();
         if (sender instanceof ConsoleCommandSender) {
             senderName = "Console";
         }
-        if (command.getName().equalsIgnoreCase("modreq")) {
-            if (args.length == 0) {
-                return false;
-            }
-
-            StringBuilder request = new StringBuilder(args[0]);
-            for (int i = 1; i < args.length; i++) {
-                request.append(" ").append(args[i]);
-            }
-            
-            if (sender instanceof Player) {
-                if (reqTable.getNumRequestFromUser(player.getUniqueId()) < config.MAX_REQUESTS) {
-                    Request req = new Request();
-					req.setPlayerUUID(player.getUniqueId());
-                    req.setPlayerName(senderName);
-                    String r = ChatColor.translateAlternateColorCodes('&', request.toString());
-                    r = ChatColor.stripColor(r);
-                    req.setRequest(r);
-                    req.setRequestTime(System.currentTimeMillis());
-                    String location = String.format("%s,%f,%f,%f,%f,%f", player.getWorld().getName(), player.getLocation().getX(), player.getLocation().getY(), player.getLocation().getZ(), player.getLocation().getYaw(), player.getLocation().getPitch());
-                    req.setRequestLocation(location);
-                    req.setStatus(RequestStatus.OPEN);
-
-                    reqTable.save(req);
-                    environment.put("request_id", String.valueOf(req.getId()));
-                    messageMods(config.MOD__NEW_REQUEST);
-                    sendMessage(sender, config.GENERAL__REQUEST_FILED);
-                } else {
-                    environment.put("max_requests", config.MAX_REQUESTS.toString());
-                    sendMessage(sender, config.GENERAL__MAX_REQUESTS);
-                }
-            }
-        }
-        else if (command.getName().equalsIgnoreCase("check")) {
-            // Setting page > 0 triggers a page listing.
-            int page = 1;
-            int requestId = 0;
-            int totalRequests = 0;
-            String searchTerm = null;
-			UUID limitUUID = null;
-            boolean showNotes = true;
-            
-            for (int i = 0; i < args.length; i++) {
-                String arg = args[i];
-                if (arg.equalsIgnoreCase("--admin") || arg.equalsIgnoreCase("-a")) {
-                    includeElevated = true;
-                }
-                else if (arg.startsWith("p:")) {
-                    page = Integer.parseInt(arg.substring(2));
-                }
-                else if (arg.equalsIgnoreCase("--page") || arg.equalsIgnoreCase("-p")) {
-                    if (i+1 > args.length) {
-                        sendMessage(sender, config.GENERAL__PAGE_ERROR);
-                        return true;
-                    }
-                    else {
-                        try {
-                            page = Integer.parseInt(args[i+1]);
-                            i++;
-                        }
-                        catch (NumberFormatException ex) {
-                            sendMessage(sender, config.GENERAL__PAGE_ERROR);
-                            return true;
-                        }
-                    }
-                }
-                else if (arg.equalsIgnoreCase("--search") || arg.equalsIgnoreCase("-s")) {
-                    if (i+1 < args.length) {
-                        searchTerm = args[i+1];
-                        i++;
-                    }
-                    else {
-                        sendMessage(sender, config.GENERAL__SEARCH_ERROR);
-                        return true;
-                    }
-                }
-                else {
-                    try {
-                        requestId = Integer.parseInt(arg);
-                        page = 0;
-                    }
-                    catch (NumberFormatException ex) {
-                        sendMessage(sender, config.GENERAL__REQUEST_NUMBER);
-                        return true;
-                    }
-                }
-            }
-            
-            if (!sender.hasPermission("modreq.check")) {
-				if (sender instanceof Player) {
-					limitUUID = senderUUID;
-				}
-                showNotes = false;
-            }
-            
-            List<Request> requests = new ArrayList<Request>();
-            
-            if (page > 0) {
-                if (limitUUID != null) {
-                    requests.addAll(reqTable.getUserRequests(limitUUID));
-                    totalRequests = requests.size();
-                } else {
-                    requests.addAll(reqTable.getRequestPage(page - 1, 5, includeElevated, searchTerm, RequestStatus.OPEN, RequestStatus.CLAIMED));
-                    totalRequests = reqTable.getTotalRequest(includeElevated, searchTerm, RequestStatus.OPEN, RequestStatus.CLAIMED);
-                }
-            } else if (requestId > 0) {
-                Request req = reqTable.getRequest(requestId);
-                List<Note> notes = noteTable.getRequestNotes(req);
-                
-                if (req != null) {
-                    totalRequests = 1;
-                    if (limitUUID != null && req.getPlayerUUID().equals(limitUUID)) {
-                        requests.add(req);
-                    } else if (limitUUID == null) {
-                        requests.add(req);
-                    } else {
-                        totalRequests = 0;
-                    }
-                } else {
-                    totalRequests = 0;
-                }
-            }
-            
-            if (totalRequests == 0) {
-                if (limitUUID != null) {
-                    if (requestId > 0) {
-                        sendMessage(sender, config.GENERAL__REQUEST_ERROR);
-                    }
-                    else {
-                        sendMessage(sender, config.GENERAL__NO_REQUESTS);
-                    }
-                }
-                else {
-                    sendMessage(sender, config.MOD__NO_REQUESTS);
-                }
-            } else if (totalRequests == 1 && requestId > 0) {
-                messageRequestToPlayer(sender, requests.get(0), showNotes);
-            } else if (totalRequests > 0) {
-                if (page > 1 && requests.isEmpty()) {
-                    sendMessage(sender, config.MOD__EMPTY_PAGE);
-                } else {
-                    boolean showPage = true;
-                    if (limitUUID != null) {
-                        showPage = false;
-                    }
-                    messageRequestListToPlayer(sender, requests, page, totalRequests, showPage);
-                }
-            } else {
-                // there was an error.
-            }
-        }
-        else if (command.getName().equalsIgnoreCase("tp-id")) {
+        
+        if (command.getName().equalsIgnoreCase("tp-id")) {
             if (args.length == 0) {
                 return false;
             }
@@ -685,7 +557,7 @@ public class ModReq extends JavaPlugin {
         return message;
     }
 
-    private void messageRequestToPlayer(CommandSender sender, Request req, boolean showNotes) {
+    public void messageRequestToPlayer(CommandSender sender, Request req, boolean showNotes) {
         List<String> messages = new ArrayList<String>();
         Location loc = stringToLocation(req.getRequestLocation());
         String location = String.format("%s, %d, %d, %d", loc.getWorld().getName(), Math.round(loc.getX()), Math.round(loc.getY()), Math.round(loc.getZ()));
@@ -733,7 +605,7 @@ public class ModReq extends JavaPlugin {
         sender.sendMessage(messages.toArray(new String[1]));
     }
 
-    private void messageRequestListToPlayer(CommandSender sender, List<Request> reqs, int page, int totalRequests, boolean showPage) {
+    public void messageRequestListToPlayer(CommandSender sender, List<Request> reqs, int page, int totalRequests, boolean showPage) {
         List<String> messages = new ArrayList<String>();
         
         environment.put("num_requests", String.valueOf(totalRequests));

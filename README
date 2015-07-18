@@ -14,3 +14,11 @@ modreq.claim: Claim a request
 modreq.done: Finish a request
 modreq.teleport: Teleport to a request
 modreq.request: Make a request (defaults to true)
+
+
+Database Id reset script todo
+
+	> Copy data into local array
+	DELETE FROM modreq_requests;
+	ALTER TABLE modreq_requests AUTO_INCREMENT = 1;
+	> mass insert data from local array

@@ -5,9 +5,7 @@ import java.util.List;
 import nu.nerd.modreq.database.Request;
 import nu.nerd.modreq.database.Request.RequestStatus;
 
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -23,13 +21,13 @@ class ModReqListener implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         if (event.getPlayer().hasPermission("modreq.check")) {
             boolean includeElevated = event.getPlayer().hasPermission("modreq.cleardb");
-            int open = plugin.reqTable.getTotalRequest(includeElevated, null, RequestStatus.OPEN, RequestStatus.CLAIMED);
+            int open = plugin.getRequestTable().getTotalRequest(includeElevated, null, RequestStatus.OPEN, RequestStatus.CLAIMED);
             if (open > 0) {
                 event.getPlayer().sendMessage(ChatColor.GREEN + "There are " + open + " open mod requests. Type /check to see them.");
             }
         }
         
-        List<Request> missedClosed = plugin.reqTable.getMissedClosedRequests(event.getPlayer().getUniqueId());
+        List<Request> missedClosed = plugin.getRequestTable().getMissedClosedRequests(event.getPlayer().getUniqueId());
         
         for (Request req : missedClosed) {
         	String doneMessage = req.getCloseMessage();
@@ -42,7 +40,7 @@ class ModReqListener implements Listener {
     		event.getPlayer().sendMessage(ChatColor.GREEN + message);
         	req.setCloseSeenByUser(true);
         	
-        	plugin.reqTable.save(req);
+        	plugin.getRequestTable().save(req);
         }
     }
 }

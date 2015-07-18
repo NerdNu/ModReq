@@ -78,10 +78,10 @@ permissions:
             description: Allow a player to claim a request
           modreq.done:
             description: Allow a player to close a request
-          modreq.teleport:
-            description: Allow a player to teleport to the location a request was made
           modreq.notice:
             description: Allow a player to receive modreq broadcasts
+  modreq.teleport:
+    description: Allow a player to teleport to the location a request was made
   modreq.cleardb:
     description: Allow a player to clear the database.
   modreq.upgrade:

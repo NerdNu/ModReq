@@ -23,6 +23,7 @@ public class RequestTable {
 
         Query<Request> query = plugin.getPluginDatabase().find(Request.class).where()
                         .ieq("playerUUID", uuid.toString())
+                        .eq("serverLocation", plugin.getServerName())
                         .in("status", RequestStatus.OPEN, RequestStatus.CLAIMED).query();
 
         if (query != null) {
@@ -35,7 +36,11 @@ public class RequestTable {
     public List<Request> getMissedClosedRequests(UUID uuid) {
         List<Request> retVal = new ArrayList<Request>();
 
-        Query<Request> query = plugin.getPluginDatabase().find(Request.class).where().ieq("playerUUID", uuid.toString()).eq("status", RequestStatus.CLOSED).eq("closeSeenByUser", false).query();
+        Query<Request> query = plugin.getPluginDatabase().find(Request.class).where()
+                .ieq("playerUUID", uuid.toString())
+                .eq("serverLocation", plugin.getServerName())
+                .eq("status", RequestStatus.CLOSED)
+                .eq("closeSeenByUser", false).query();
 
         if (query != null) {
             retVal.addAll(query.findList());
@@ -46,7 +51,10 @@ public class RequestTable {
 
     public int getNumRequestFromUser(UUID uuid) {
         int retVal = 0;
-        Query<Request> query = plugin.getPluginDatabase().find(Request.class).where().ieq("playerUUID", uuid.toString()).in("status", RequestStatus.OPEN).query();
+        Query<Request> query = plugin.getPluginDatabase().find(Request.class).where()
+                .ieq("playerUUID", uuid.toString())
+                .eq("serverLocation", plugin.getServerName())
+                .in("status", RequestStatus.OPEN).query();
 
         if (query != null) {
             retVal = query.findRowCount();
@@ -58,7 +66,7 @@ public class RequestTable {
     public int getTotalRequest(boolean includeElevated, String searchTerm, RequestStatus ... statuses) {
         int retVal = 0;
 
-        ExpressionList<Request> expressions = plugin.getPluginDatabase().find(Request.class).where().in("status", statuses);
+        ExpressionList<Request> expressions = plugin.getPluginDatabase().find(Request.class).where().eq("serverLocation", plugin.getServerName()).in("status", statuses);
 
                 if (searchTerm != null)
                 {
@@ -86,7 +94,7 @@ public class RequestTable {
 		return null;
 	}
 
-    public List<Request> getRequestPage(int page, int perPage, boolean includeElevated, String searchTerm, RequestStatus ... statuses) {
+    public List<Request> getRequestPage(int page, int perPage, boolean includeElevated, boolean includeExternalServers, String searchTerm, RequestStatus ... statuses) {
         List<Request> retVal = new ArrayList<Request>();
 
         ExpressionList<Request> expressions = plugin.getPluginDatabase().find(Request.class).where().in("status", statuses);
@@ -98,6 +106,10 @@ public class RequestTable {
 
                 if (!includeElevated)
                     expressions.where().eq("flagForAdmin", false);
+                
+                if (!includeExternalServers) {
+                    expressions.where().eq("serverLocation", plugin.getServerName());
+                }
 
                 Query<Request> query = expressions.query();
 

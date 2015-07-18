@@ -35,7 +35,10 @@ public class Request {
 
     @NotNull
     private RequestStatus status;
-
+    
+    @NotNull
+    private String serverLocation;
+    
     @NotNull
     private String requestLocation;
     private String closeMessage;
@@ -51,13 +54,13 @@ public class Request {
         return this.id;
     }
 
-	public void setPlayerUUID(UUID playerUUID) {
-		this.playerUUID = playerUUID;
-	}
-	
-	public UUID getPlayerUUID() {
-		return this.playerUUID;
-	}
+    public void setPlayerUUID(UUID playerUUID) {
+            this.playerUUID = playerUUID;
+    }
+
+    public UUID getPlayerUUID() {
+            return this.playerUUID;
+    }
 
     public void setPlayerName(String playerName) {
         this.playerName = playerName;
@@ -67,13 +70,13 @@ public class Request {
         return this.playerName;
     }
 
-	public void setAssignedModUUID(UUID assignedModUUID) {
-		this.assignedModUUID = assignedModUUID;
-	}
-	
-	public UUID getAssignedModUUID() {
-		return this.assignedModUUID;
-	}
+    public void setAssignedModUUID(UUID assignedModUUID) {
+            this.assignedModUUID = assignedModUUID;
+    }
+
+    public UUID getAssignedModUUID() {
+            return this.assignedModUUID;
+    }
 
     public void setAssignedMod(String assignedMod) {
         this.assignedMod = assignedMod;
@@ -105,6 +108,14 @@ public class Request {
 
     public RequestStatus getStatus() {
         return this.status;
+    }
+    
+    public String getServerLocation() {
+        return serverLocation;
+    }
+
+    public void setServerLocation(String serverLocation) {
+        this.serverLocation = serverLocation;
     }
 
     public void setRequestLocation(String requestLocation) {
