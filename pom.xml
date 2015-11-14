@@ -6,14 +6,34 @@
 	<version>1.6</version>
 	<packaging>jar</packaging>
 	<name>ModReq</name>
+	<description>Moderator Request Sytem</description>
+	<url>https://github.com/NerdNu/ModReq</url>
+	<scm>
+		<connection>scm:git:https://github.com/NerdNu/ModReq.git</connection>
+		<developerConnection>scm:git:https://github.com/NerdNu/ModReq.git</developerConnection>
+		<url>https://github.com/NerdNu/ModReq</url>
+	</scm>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
+
+	<repositories>
+		<repository>
+			<id>spigot-repo</id>
+			<url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+		</repository>
+		<repository>
+			<id>znode-releases</id>
+			<name>znode-releases</name>
+			<url>http://repo.zno.de/artifactory/libs-release-local</url>
+		</repository>
+	</repositories>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.bukkit</groupId>
 			<artifactId>bukkit</artifactId>
-			<version>1.7.10-R0.1-SNAPSHOT</version>
+			<version>1.8.8-R0.1-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
@@ -23,44 +43,7 @@
 			<version>0.1</version>
 		</dependency>
 	</dependencies>
-	<distributionManagement>
-		<repository>
-			<id>repobo-rel</id>
-			<name>repo.bukkit.org Releases</name>
-			<url>http://repo.bukkit.org/content/repositories/releases/</url>
-		</repository>
-		<snapshotRepository>
-			<id>repobo-snap</id>
-			<name>repo.bukkit.org Snapshots</name>
-			<url>http://repo.bukkit.org/content/repositories/snapshots/</url>
-		</snapshotRepository>
-	</distributionManagement>
 
-	<repositories>
-		<repository>
-			<id>repobo-snap</id>
-			<url>http://repo.bukkit.org/content/groups/public</url>
-		</repository>
-		<repository>
-			<id>znode-releases</id>
-			<name>znode-releases</name>
-			<url>http://repo.zno.de/artifactory/libs-release-local</url>
-		</repository>
-	</repositories>
-
-	<pluginRepositories>
-		<pluginRepository>
-			<id>bukkit-plugins</id>
-			<url>http://repo.bukkit.org/content/groups/public</url>
-		</pluginRepository>
-	</pluginRepositories>
-	<description>Moderator Request Sytem</description>
-	<url>https://github.com/NerdNu/ModReq</url>
-	<scm>
-		<connection>scm:git:https://github.com/NerdNu/ModReq.git</connection>
-		<developerConnection>scm:git:https://github.com/NerdNu/ModReq.git</developerConnection>
-		<url>https://github.com/NerdNu/ModReq</url>
-	</scm>
 	<build>
 		<sourceDirectory>${basedir}/src</sourceDirectory>
 		<resources>
@@ -113,6 +96,7 @@
 							<goal>shade</goal>
 						</goals>
 						<configuration>
+							<createDependencyReducedPom>false</createDependencyReducedPom>
 							<shadedArtifactAttached>false</shadedArtifactAttached>
 							<shadedClassifierName>Bundle</shadedClassifierName>
 							<artifactSet>
