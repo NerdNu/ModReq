@@ -14,11 +14,16 @@ Commands
 --------
 Note: In the discussion that follows, `#` signifies an number.
 
+Many commands support the use of `-`, instead of a request ID number, to signify the request that was most recently claimed by the staff member.
+
 `/modreq <request>`
  * Make a request.  The coordinates of the player making the request are saved by the command.
 
 `/check #`
  * Retrieve a full description of the request with the specified number.
+
+`/check -`
+ * Retrieve a full description of the most recently claimed request.
 
 `/check [--page # | -p # | p:#] [--admin | -a] [--search term | -s term]`
  * List all open requests matching specified criteria.  Requests are grouped into pages of (by default) 5 requests and `/check` only shows one page of requests at a time.
@@ -29,6 +34,7 @@ Note: In the discussion that follows, `#` signifies an number.
 
 `/tp-id #` or `/tpid #`
  * A staff-only command to teleport to the location of a request.
+ * `/tp-id -` or `/tpi -` will teleport to the location of the most recently claimed request.
 
 `/claim #`
  * A staff-only command to claim exclusive access to a request.
@@ -37,28 +43,50 @@ Note: In the discussion that follows, `#` signifies an number.
 `/unclaim #`
  * Remove your claim on a request that you have previously claimed with `/claim`.
  * The request is returned to the OPEN state and not associated with any staff member.
+ * `/unclaim -` will unclaim the most recently claimed request.
 
 `/done # [message]`
  * Mark a request as completed, optionally specifying a message that will be sent to the requesting player.
  * The request is moved to the CLOSED state.
- * Typical setups will grant non-staff players the `modreq.done` permission so that they can cancel their own requests using this command.
+ * `/done - [message]` closes the most recently claimed request, with an optional close message.
 
 `/reopen #`
  * Reopen a closed request.
  * The request changes to the OPEN state.
+ * `/reopen -` attempts to reopen the most recently claimed request.
 
 `/elevate #`
  * Mark the request as requiring handling by an Admin.
+ * If the request is currently claimed by the staff member running the command, it is unclaimed.
+ * `/elevate -` attempts to unclaim and elevate the most recently claimed request.
 
-`/tpi #` or `/tpinfo #`
+`/tpinfo #` or `/tpi #`
  * A staff command to teleport to and check the details of a request without claiming it.
  * This command is shorthand for `/tp-id #` followed by `/check #`.
+ * `/tpinfo -` or `/tpi -` will teleport to and check the most recently claimed request.
 
 `/tpc #`
  * A staff command that tries to claim a request and, _only if successful_, teleport to and check the details of the request.
  * An error message will be shown if another staff member has already claimed or closed the request.
  * If you have already claimed the request, the command acts as `/tpi`.
  * The command executes `/claim #`, and if successful `/tpi #`.
+
+`/mr-note add # text`
+ * A staff command to add a note to a request designated by its ID number.
+ * The first note attached to a request is numbered 1.  Subsequent notes attached to the same request have progressively higher numbers.
+ * Notes are only visible to staff.
+ * `/mr-note add - text` adds a note to the most recently claimed request.
+
+`/mr-note remove # #`
+ * A staff command to remove a note from a request; the first number is the request ID and the second number is the note ID, which starts at 1.
+ * Notes are only visible to staff.
+ * `/mr-note remove - #` removes a note from the most recently claimed request.
+
+`/mr-reset`
+ * A staff command to reset the database.
+
+`/mr-upgrade`
+ * A staff command to upgrade the database.
 
 
 Permissions
@@ -67,7 +95,7 @@ Permissions
  * `modreq.mod` - All Moderator permissions. Certain administrative commands are excluded.
    * `modreq.check` - Staff permission to check requests. Note that players lacking this permission can still check the status of requests they made themselves.
    * `modreq.claim` - Staff permission to claim a request.
-   * `modreq.done` - Staff permission to close a request.
+   * `modreq.done` - Staff permission to close a request that belongs to another player.  Non-staff can always close their own requests, even without this permission.  This permission is also required to `/reopen` requests.
    * `modreq.teleport` - Staff permission to teleport to the location the request was made.
    * `modreq.notice` - Staff permission to receive broadcast messages about requests, e.g. new requests made.
  * `modreq.cleardb` - Admin permission to clear the request database.

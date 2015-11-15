@@ -39,6 +39,8 @@ messages:
     already-claimed: "&CRequest already claimed."
     note-added: "&ANote added to request {request_id} successfully."
     note-removed: "&ANote removed from request {request_id} successfully."
+    note-number: "&CYou must specify a number for the note, starting at 1."
+    note-missing: "&CRequest {request_id} has no note numbered {note_id}."
 colour:
   online: "&A"
   offline: "&C"

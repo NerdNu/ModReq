@@ -43,6 +43,8 @@ public class Configuration {
     public String MOD__ALREADY_CLAIMED;
     public String MOD__NOTE_ADDED;
     public String MOD__NOTE_REMOVED;
+    public String MOD__NOTE_NUMBER;
+    public String MOD__NOTE_MISSING;
     public String COLOUR_ONLINE;
     public String COLOUR_OFFLINE;
     public Integer MAX_REQUESTS;
@@ -93,6 +95,8 @@ public class Configuration {
         MOD__ALREADY_CLAIMED = plugin.getConfig().getString("messages.mod.already-claimed");
         MOD__NOTE_ADDED = plugin.getConfig().getString("messages.mod.note-added");
         MOD__NOTE_REMOVED = plugin.getConfig().getString("messages.mod.note-removed");
+        MOD__NOTE_NUMBER = plugin.getConfig().getString("messages.mod.note-number");
+        MOD__NOTE_MISSING = plugin.getConfig().getString("messages.mod.note-missing");
         COLOUR_OFFLINE = plugin.getConfig().getString("colour.offline");
         COLOUR_ONLINE = plugin.getConfig().getString("colour.online");
         MAX_REQUESTS = plugin.getConfig().getInt("max-requests", 5);

@@ -1,7 +1,10 @@
 package nu.nerd.modreq;
 
 import com.avaje.ebean.SqlRow;
+
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -12,24 +15,27 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
 
 import javax.persistence.PersistenceException;
+
 import nu.nerd.modreq.database.Note;
 import nu.nerd.modreq.database.NoteTable;
-
 import nu.nerd.modreq.database.Request;
 import nu.nerd.modreq.database.Request.RequestStatus;
 import nu.nerd.modreq.database.RequestTable;
-import org.bukkit.Bukkit;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
+import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permissible;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -42,6 +48,18 @@ public class ModReq extends JavaPlugin {
     ModReqListener listener = new ModReqListener(this);
     Configuration config = new Configuration(this);
     Map<String, String> environment = new HashMap<String, String>();
+
+    /**
+     * Map from UUID of staff member to integer ID of most recently claimed
+     * request.
+     *
+     * This acts as the default request ID when handling "/check -", "/tp-id -"
+     * and "/tpinfo -", and synonyms.
+     *
+     * This collection is saved in most-recent-claims.yml across restarts.
+     */
+    Map<UUID, Integer> claimedIds = new HashMap<UUID, Integer>();
+    File claimsFile;
 
     RequestTable reqTable;
     NoteTable noteTable;
@@ -57,6 +75,9 @@ public class ModReq extends JavaPlugin {
 
         config.load();
 
+        claimsFile = new File(getDataFolder(), "most-recent-claims.yml");
+        loadClaimedIds();
+
         reqTable = new RequestTable(this);
         noteTable = new NoteTable(this);
         getServer().getPluginManager().registerEvents(listener, this);
@@ -64,7 +85,7 @@ public class ModReq extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        // tear down
+        saveClaimedIds();
     }
 
     public boolean setupDatabase() {
@@ -272,34 +293,7 @@ public class ModReq extends JavaPlugin {
             if (args.length == 0) {
                 return false;
             }
-
-            StringBuilder request = new StringBuilder(args[0]);
-            for (int i = 1; i < args.length; i++) {
-                request.append(" ").append(args[i]);
-            }
-
-            if (sender instanceof Player) {
-                if (reqTable.getNumRequestFromUser(player.getUniqueId()) < config.MAX_REQUESTS) {
-                    Request req = new Request();
-					req.setPlayerUUID(player.getUniqueId());
-                    req.setPlayerName(senderName);
-                    String r = ChatColor.translateAlternateColorCodes('&', request.toString());
-                    r = ChatColor.stripColor(r);
-                    req.setRequest(r);
-                    req.setRequestTime(System.currentTimeMillis());
-                    String location = String.format("%s,%f,%f,%f,%f,%f", player.getWorld().getName(), player.getLocation().getX(), player.getLocation().getY(), player.getLocation().getZ(), player.getLocation().getYaw(), player.getLocation().getPitch());
-                    req.setRequestLocation(location);
-                    req.setStatus(RequestStatus.OPEN);
-
-                    reqTable.save(req);
-                    environment.put("request_id", String.valueOf(req.getId()));
-                    messageMods(config.MOD__NEW_REQUEST);
-                    sendMessage(sender, config.GENERAL__REQUEST_FILED);
-                } else {
-                    environment.put("max_requests", config.MAX_REQUESTS.toString());
-                    sendMessage(sender, config.GENERAL__MAX_REQUESTS);
-                }
-            }
+            modreq(sender, senderName, player, args);
         }
         else if (command.getName().equalsIgnoreCase("check")) {
             check(sender, senderUUID, args);
@@ -308,13 +302,13 @@ public class ModReq extends JavaPlugin {
             if (args.length == 0) {
                 return false;
             }
-            tpId(sender, player, args);
+            tpId(sender, senderUUID, player, args);
         }
         else if (command.getName().equalsIgnoreCase("tpinfo")) {
             if (args.length == 0) {
                 return false;
             }
-            tpId(sender, player, args);
+            tpId(sender, senderUUID, player, args);
             check(sender, senderUUID, args);
         }
         else if (command.getName().equalsIgnoreCase("tpc")) {
@@ -322,7 +316,7 @@ public class ModReq extends JavaPlugin {
                 return false;
             }
             if (claim(sender, senderName, senderUUID, args)) {
-                tpId(sender, player, args);
+                tpId(sender, senderUUID, player, args);
                 check(sender, senderUUID, args);
             }
         }
@@ -336,173 +330,24 @@ public class ModReq extends JavaPlugin {
             if (args.length == 0) {
                 return false;
             }
-            int requestId = 0;
-
-            try {
-                requestId = Integer.parseInt(args[0]);
-
-                if (sender instanceof Player) {
-                    Request req = reqTable.getRequest(requestId);
-                    if (req.getAssignedMod().equalsIgnoreCase(senderName) && req.getStatus() == RequestStatus.CLAIMED) {
-                        req.setStatus(RequestStatus.OPEN);
-                        req.setAssignedModUUID(null);
-                        req.setAssignedMod(null);
-                        reqTable.save(req);
-
-                        environment.put("mod", senderName);
-                        environment.put("request_id", String.valueOf(requestId));
-                        messageMods(config.MOD__UNCLAIM);
-                        environment.remove("mod");
-                        environment.remove("request_id");
-                    }
-                }
-            }
-            catch (NumberFormatException ex) {
-                sendMessage(sender, config.GENERAL__REQUEST_NUMBER);
-            }
+            unclaim(sender, senderName, senderUUID, args);
         }
         else if (command.getName().equalsIgnoreCase("done")) {
             if (args.length == 0) {
-                return false;
+               return false;
             }
-
-            int requestId = 0;
-
-            try {
-                requestId = Integer.parseInt(args[0]);
-
-                String doneMessage = "";
-
-                if (args.length > 1) {
-                    StringBuilder doneMessageBuilder = new StringBuilder(args[1]);
-                    for (int i = 2; i < args.length; i++) {
-                        doneMessageBuilder.append(" ").append(args[i]);
-                    }
-
-                    doneMessage = doneMessageBuilder.toString();
-                }
-
-                Request req = reqTable.getRequest(requestId);
-
-                if (req != null && req.getStatus() == RequestStatus.CLOSED) {
-                    sendMessage(sender, config.MOD__ALREADY_CLOSED);
-                }
-                else {
-                    if (sender.hasPermission("modreq.done") && req != null) {
-                        environment.put("mod", senderName);
-                        environment.put("request_id", String.valueOf(requestId));
-                        messageMods(config.MOD__COMPLETED);
-                        environment.remove("request_id");
-                        environment.remove("mod");
-
-                        if (doneMessage != null && doneMessage.length() != 0) {
-                            environment.put("close_message", doneMessage);
-                            messageMods(config.MOD__COMPLETED_MESSAGE);
-                            environment.remove("close_message");
-                        }
-                    }
-                    else {
-						if (req.getPlayerUUID() != null && !req.getPlayerUUID().equals(senderUUID)) {
-							req = null;
-							sendMessage(sender, config.GENERAL__CLOSE_ERROR);
-						}
-                    }
-
-                    if (req != null) {
-                        req.setStatus(RequestStatus.CLOSED);
-                        req.setCloseTime(System.currentTimeMillis());
-                        req.setCloseMessage(doneMessage);
-                        req.setAssignedModUUID(senderUUID);
-                        req.setAssignedMod(senderName);
-
-                        Player requestCreator = getServer().getPlayerExact(req.getPlayerName());
-                        if (requestCreator != null) {
-                            if (!requestCreator.getUniqueId().equals(senderUUID)) {
-                                String message = "";
-                                environment.put("close_message", doneMessage);
-                                environment.put("mod", senderName);
-                                environment.put("request_id", String.valueOf(req.getId()));
-                                if (doneMessage != null && doneMessage.length() != 0) {
-                                    sendMessage(requestCreator, config.GENERAL__COMPLETED_MESSAGE);
-                                } else {
-                                    sendMessage(requestCreator, config.GENERAL__COMPLETED);
-                                }
-                                environment.put("close_message", doneMessage);
-                                environment.put("mod", senderName);
-                                environment.put("request_id", String.valueOf(req.getId()));
-                                requestCreator.sendMessage(ChatColor.GREEN + message);
-                                environment.remove("close_message");
-                                environment.remove("mod");
-                            }
-                            else {
-                                if (!sender.hasPermission("modreq.done")) {
-                                    environment.put("request_id", String.valueOf(requestId));
-                                    messageMods(config.MOD__DELETED);
-                                    environment.put("request_id", String.valueOf(requestId));
-                                    sendMessage(sender, config.GENERAL__DELETED);
-                                    environment.remove("request_id");
-                                }
-                            }
-                            req.setCloseSeenByUser(true);
-                        }
-                        reqTable.save(req);
-                    }
-                }
-            }
-            catch (NumberFormatException ex) {
-                sendMessage(sender, config.GENERAL__REQUEST_NUMBER);
-            }
+            done(sender, senderName, senderUUID, args);
         }
         else if (command.getName().equalsIgnoreCase("reopen")) {
             if (args.length == 0) {
                 return false;
             }
-            int requestId = 0;
-
-            try {
-                requestId = Integer.parseInt(args[0]);
-
-                if (sender instanceof Player) {
-                    Request req = reqTable.getRequest(requestId);
-                    if ((req.getAssignedModUUID().equals(senderUUID) && req.getStatus() == RequestStatus.CLAIMED) || req.getStatus() == RequestStatus.CLOSED) {
-                        req.setStatus(RequestStatus.OPEN);
-						req.setAssignedModUUID(null);
-                        req.setAssignedMod(null);
-                        req.setCloseSeenByUser(false);
-                        reqTable.save(req);
-
-                        environment.put("mod", sender.getName());
-                        environment.put("request_id", String.valueOf(requestId));
-                        messageMods(config.MOD__REOPENED);
-                        environment.remove("mod");
-                        environment.remove("request_id");
-                    }
-                }
-            }
-            catch (NumberFormatException ex) {
-                sendMessage(sender, config.GENERAL__REQUEST_NUMBER);
-            }
+            reopen(sender, senderUUID, args);
         } else if (command.getName().equalsIgnoreCase("elevate")) {
             if (args.length == 0) {
                 return false;
             }
-            int requestId = 0;
-
-            try {
-                requestId = Integer.parseInt(args[0]);
-
-                Request req = reqTable.getRequest(requestId);
-                if (req.getStatus() == RequestStatus.OPEN) {
-                    req.setFlagForAdmin(true);
-                    environment.put("request_id", String.valueOf(req.getId()));
-                    messageMods(config.MOD__FLAGGED);
-                    environment.remove("request_id");
-                    reqTable.save(req);
-                }
-            }
-            catch (NumberFormatException ex) {
-                sendMessage(sender, config.GENERAL__REQUEST_NUMBER);
-            }
+            elevate(sender, senderName, senderUUID, args);
         } else if ( command.getName().equalsIgnoreCase("mr-reset")) {
             try {
                 resetDatabase();
@@ -514,106 +359,38 @@ public class ModReq extends JavaPlugin {
             if (args.length < 3) {
                 return false;
             }
-            if (sender.hasPermission("modreq.mod")) {
-                int reqId;
-
-                try {
-                    reqId = Integer.parseInt(args[1].trim());
-                } catch (NumberFormatException e) {
-                    return false;
-                }
-
-                Request request = reqTable.getRequest(reqId);
-                if (request == null) {
-                    return false;
-                }
-
-                if (args[0].equalsIgnoreCase("remove")) {
-
-                    //kind of hacky but works
-                    int idToRemove;
-
-                    try {
-                        idToRemove = Integer.parseInt(args[2]);
-                    } catch (NumberFormatException e) {
-                        return false;
-                    }
-
-                    List<Note> notes = noteTable.getRequestNotes(request);
-
-                    Note noteToRemove = notes.get(idToRemove - 1);
-                    if(noteToRemove == null) {
-                        return false;
-                    }
-
-                    noteTable.remove(noteToRemove);
-                    environment.put("request_id", Integer.toString(reqId));
-                    sender.sendMessage(buildMessage(config.MOD__NOTE_REMOVED));
-                    environment.remove("request_id");
-                } else if (args[0].equalsIgnoreCase("add")) {
-
-                    if(reqTable.getRequest(reqId) == null) {
-                        return false;
-                    }
-
-                    StringBuilder noteBody = new StringBuilder(args[2]);
-                    for (int i = 3; i < args.length; i++) {
-                        noteBody.append(" ").append(args[i]);
-                    }
-
-                    Note note = new Note();
-                    note.setNoteBody(noteBody.toString());
-					note.setPlayerUUID(senderUUID);
-                    note.setPlayer(senderName);
-                    note.setRequestId(reqId);
-                    noteTable.save(note);
-
-                    environment.put("request_id", Integer.toString(reqId));
-                    sender.sendMessage(buildMessage(config.MOD__NOTE_ADDED));
-                    environment.remove("request_id");
-                }
-            }
-        } else if ( command.getName().equalsIgnoreCase("mr-upgrade")) {
-            if (sender.hasPermission("modreq.upgrade")) {
-//				getLogger().log(Level.INFO, "Upgrading database");
-
-//				try {
-//					SqlUpdate update = getDatabase().createSqlUpdate("ALTER TABLE modreq_requests ADD COLUMN player_uuid VARCHAR(40)");
-//					getDatabase().execute(update);
-//					getLogger().log(Level.INFO, "Created player_uuid column on modreq_requests table");
-//				} catch (PersistenceException e) {
-//					// Column already exists
-//				}
-//
-//				try {
-//					SqlUpdate update = getDatabase().createSqlUpdate("ALTER TABLE modreq_requests ADD COLUMN assigned_mod_uuid VARCHAR(40)");
-//					getDatabase().execute(update);
-//					getLogger().log(Level.INFO, "Created assigned_mod_uuid column on modreq_requests table");
-//				} catch (PersistenceException e) {
-//					// Column already exists
-//				}
-//
-//				try {
-//					SqlUpdate update = getDatabase().createSqlUpdate("ALTER TABLE modreq_notes ADD COLUMN player_uuid VARCHAR(40)");
-//					getDatabase().execute(update);
-//					getLogger().log(Level.INFO, "Created player_uuid column on modreq_notes table");
-//				} catch (PersistenceException e) {
-//					// Column already exists
-//				}
-//
-//				getDatabase().externalModification(name, includeElevated, includeElevated, includeElevated);
-
-				BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
-				scheduler.scheduleSyncDelayedTask(this, new Runnable() {
-					@Override
-					public void run() {
-						resetDatabase();
-					}
-				}, 0L);
-			}
+            return mrNote(sender, senderName, senderUUID, args);
+        } else if (command.getName().equalsIgnoreCase("mr-upgrade")) {
+            mrUpgrade();
 		}
-
         return true;
+    }
+
+    private void modreq(CommandSender sender, String senderName, Player player, String[] args) {
+        if (!(sender instanceof Player)) {
+            return;
+        }
+
+        if (reqTable.getNumRequestFromUser(player.getUniqueId()) < config.MAX_REQUESTS) {
+            Request req = new Request();
+            req.setPlayerUUID(player.getUniqueId());
+            req.setPlayerName(senderName);
+            String r = ChatColor.translateAlternateColorCodes('&', concatArgs(args, 0));
+            r = ChatColor.stripColor(r);
+            req.setRequest(r);
+            req.setRequestTime(System.currentTimeMillis());
+            String location = String.format("%s,%f,%f,%f,%f,%f", player.getWorld().getName(), player.getLocation().getX(), player.getLocation().getY(), player.getLocation().getZ(), player.getLocation().getYaw(), player.getLocation().getPitch());
+            req.setRequestLocation(location);
+            req.setStatus(RequestStatus.OPEN);
+
+            reqTable.save(req);
+            environment.put("request_id", String.valueOf(req.getId()));
+            messageMods(config.MOD__NEW_REQUEST);
+            sendMessage(sender, config.GENERAL__REQUEST_FILED);
+        } else {
+            environment.put("max_requests", config.MAX_REQUESTS.toString());
+            sendMessage(sender, config.GENERAL__MAX_REQUESTS);
+        }
     }
 
     private void check(CommandSender sender, UUID senderUUID, String[] args) {
@@ -660,6 +437,13 @@ public class ModReq extends JavaPlugin {
                     return;
                 }
             }
+            else if (arg.equals("-")) {
+                Integer claimedId = claimedIds.get(senderUUID);
+                if (claimedId != null) {
+                    requestId = claimedId;
+                    page = 0;
+                }
+            }
             else {
                 try {
                     requestId = Integer.parseInt(arg);
@@ -691,8 +475,10 @@ public class ModReq extends JavaPlugin {
             }
         } else if (requestId > 0) {
             Request req = reqTable.getRequest(requestId);
-
-            if (req != null) {
+            if (req == null) {
+                sendMessage(sender, config.GENERAL__REQUEST_ERROR);
+                return;
+            } else {
                 totalRequests = 1;
                 if (limitUUID != null && req.getPlayerUUID().equals(limitUUID)) {
                     requests.add(req);
@@ -701,8 +487,6 @@ public class ModReq extends JavaPlugin {
                 } else {
                     totalRequests = 0;
                 }
-            } else {
-                totalRequests = 0;
             }
         }
 
@@ -735,27 +519,20 @@ public class ModReq extends JavaPlugin {
         }
     }
 
-    private void tpId(CommandSender sender, Player player, String[] args) {
-        int requestId = 0;
-        try {
-            requestId = Integer.parseInt(args[0]);
+    private void tpId(CommandSender sender, UUID senderUUID, Player player, String[] args) {
+        if (!(sender instanceof Player)) {
+            return;
+        }
 
-            if (sender instanceof Player) {
-                Request req = reqTable.getRequest(requestId);
-                if (req != null) {
-                    environment.put("request_id", String.valueOf(req.getId()));
-                    sendMessage(player, config.MOD__TELEPORT);
-                    Location loc = stringToLocation(req.getRequestLocation());
-                    player.teleport(loc);
-                }
-                else {
-                    sendMessage(sender, config.GENERAL__REQUEST_ERROR);
-                }
-            }
+        Request req = getRequest(sender, senderUUID, args[0], true);
+        if (req == null) {
+            return;
         }
-        catch (NumberFormatException ex) {
-            sendMessage(sender, config.GENERAL__REQUEST_NUMBER);
-        }
+
+        environment.put("request_id", String.valueOf(req.getId()));
+        sendMessage(player, config.MOD__TELEPORT);
+        Location loc = stringToLocation(req.getRequestLocation());
+        player.teleport(loc);
     }
 
     /**
@@ -766,42 +543,358 @@ public class ModReq extends JavaPlugin {
      *              other player.
      */
     private boolean claim(CommandSender sender, String senderName, UUID senderUUID, String[] args) {
-        int requestId = 0;
-        try {
-            requestId = Integer.parseInt(args[0]);
+        Request req = getRequest(sender, senderUUID, args[0], false);
+        if (req == null) {
+            return false;
+        }
+        int requestId = req.getId();
 
-            if (sender instanceof Player) {
-                Request req = reqTable.getRequest(requestId);
+        if (req.getStatus() == RequestStatus.OPEN) {
+            req.setStatus(RequestStatus.CLAIMED);
+			req.setAssignedModUUID(senderUUID);
+            req.setAssignedMod(senderName);
+            reqTable.save(req);
 
-                if (req.getStatus() == RequestStatus.OPEN) {
-                    req.setStatus(RequestStatus.CLAIMED);
-					req.setAssignedModUUID(senderUUID);
-                    req.setAssignedMod(senderName);
-                    reqTable.save(req);
+            environment.put("mod", senderName);
+            environment.put("request_id", String.valueOf(requestId));
+            messageMods(config.MOD__REQUEST_TAKEN);
+            environment.remove("mod");
+            environment.remove("request_id");
+            claimedIds.put(senderUUID, requestId);
+            return true;
 
-                    environment.put("mod", senderName);
-                    environment.put("request_id", String.valueOf(requestId));
-                    messageMods(config.MOD__REQUEST_TAKEN);
-                    environment.remove("mod");
-                    environment.remove("request_id");
-                    return true;
+        } else if (req.getStatus() == RequestStatus.CLOSED) {
+            sendMessage(sender, config.MOD__ALREADY_CLOSED);
 
-                } else if (req.getStatus() == RequestStatus.CLOSED) {
-                    sendMessage(sender, config.MOD__ALREADY_CLOSED);
-                } else if (req.getStatus() == RequestStatus.CLAIMED) {
-                    if (req.getAssignedModUUID().equals(senderUUID)) {
-                        // Already claimed by command sender. Succeed.
-                        return true;
-                    } else {
-                        sendMessage(sender, config.MOD__ALREADY_CLAIMED);
-                    }
+        } else if (req.getStatus() == RequestStatus.CLAIMED) {
+            if (req.getAssignedModUUID().equals(senderUUID)) {
+                // Already claimed by command sender. Update most recent claim.
+                claimedIds.put(senderUUID, requestId);
+                return true;
+            } else {
+                sendMessage(sender, config.MOD__ALREADY_CLAIMED);
+            }
+        }
+        return false;
+    }
+
+    private void unclaim(CommandSender sender, String senderName, UUID senderUUID, String[] args) {
+        Request req = getRequest(sender, senderUUID, args[0], true);
+        if (req == null) {
+            return;
+        }
+
+        if (req.getStatus() == RequestStatus.CLAIMED && req.getAssignedModUUID().equals(senderUUID)) {
+
+            req.setStatus(RequestStatus.OPEN);
+            req.setAssignedModUUID(null);
+            req.setAssignedMod(null);
+            reqTable.save(req);
+
+            environment.put("mod", senderName);
+            environment.put("request_id", String.valueOf(req.getId()));
+            messageMods(config.MOD__UNCLAIM);
+            environment.remove("mod");
+            environment.remove("request_id");
+        }
+    }
+
+    private void done(CommandSender sender, String senderName, UUID senderUUID, String[] args) {
+        Request req = getRequest(sender, senderUUID, args[0], true);
+        if (req == null) {
+            return;
+        }
+        int requestId = req.getId();
+
+        String doneMessage = concatArgs(args, 1);
+        boolean successfullyClosed = true;
+
+        if (req.getStatus() == RequestStatus.CLOSED) {
+            sendMessage(sender, config.MOD__ALREADY_CLOSED);
+            successfullyClosed = false;
+        } else {
+            // Moderator doing /done.
+            if (sender.hasPermission("modreq.done")) {
+                environment.put("mod", senderName);
+                environment.put("request_id", String.valueOf(requestId));
+                messageMods(config.MOD__COMPLETED);
+                environment.remove("request_id");
+                environment.remove("mod");
+
+                if (doneMessage.length() != 0) {
+                    environment.put("close_message", doneMessage);
+                    messageMods(config.MOD__COMPLETED_MESSAGE);
+                    environment.remove("close_message");
+                }
+            } else {
+                // Player doing /done.
+                if (req.getPlayerUUID() != null && !req.getPlayerUUID().equals(senderUUID)) {
+                    sendMessage(sender, config.GENERAL__CLOSE_ERROR);
+                    successfullyClosed = false;
                 }
             }
         }
-        catch (NumberFormatException ex) {
-            sendMessage(sender, config.GENERAL__REQUEST_NUMBER);
+
+        if (successfullyClosed) {
+            req.setStatus(RequestStatus.CLOSED);
+            req.setCloseTime(System.currentTimeMillis());
+            req.setCloseMessage(doneMessage);
+            req.setAssignedModUUID(senderUUID);
+            req.setAssignedMod(senderName);
+
+            Player requestCreator = getServer().getPlayerExact(req.getPlayerName());
+            if (requestCreator != null) {
+                // Message request creator immediately if online.
+                req.setCloseSeenByUser(true);
+
+                if (requestCreator.getUniqueId().equals(senderUUID)) {
+                    // Request closed by player.
+                    if (!sender.hasPermission("modreq.done")) {
+                        environment.put("request_id", String.valueOf(requestId));
+                        messageMods(config.MOD__DELETED);
+                        sendMessage(sender, config.GENERAL__DELETED);
+                        environment.remove("request_id");
+                    }
+                } else {
+                    // Request closed by moderator.
+                    environment.put("close_message", doneMessage);
+                    environment.put("mod", senderName);
+                    environment.put("request_id", String.valueOf(requestId));
+                    if (doneMessage.length() != 0) {
+                        sendMessage(requestCreator, config.GENERAL__COMPLETED_MESSAGE);
+                    } else {
+                        sendMessage(requestCreator, config.GENERAL__COMPLETED);
+                    }
+                    environment.remove("close_message");
+                    environment.remove("mod");
+                    environment.remove("request_id");
+                }
+            }
+            reqTable.save(req);
         }
-        return false;
+    }
+
+    private void reopen(CommandSender sender, UUID senderUUID, String[] args) {
+        Request req = getRequest(sender, senderUUID, args[0], true);
+        if (req == null) {
+            return;
+        }
+
+        if (req.getStatus() == RequestStatus.CLOSED ||
+            (req.getStatus() == RequestStatus.CLAIMED && req.getAssignedModUUID().equals(senderUUID))) {
+            req.setStatus(RequestStatus.OPEN);
+            req.setAssignedModUUID(null);
+            req.setAssignedMod(null);
+            req.setCloseSeenByUser(false);
+            reqTable.save(req);
+
+            environment.put("mod", sender.getName());
+            environment.put("request_id", String.valueOf(req.getId()));
+            messageMods(config.MOD__REOPENED);
+            environment.remove("mod");
+            environment.remove("request_id");
+        }
+    }
+
+    private void elevate(CommandSender sender, String senderName, UUID senderUUID, String[] args) {
+        unclaim(sender, senderName, senderUUID, args);
+
+        Request req = getRequest(sender, senderUUID, args[0], true);
+        if (req == null) {
+            return;
+        }
+        if (req.getStatus() == RequestStatus.OPEN) {
+            req.setFlagForAdmin(true);
+            environment.put("request_id", String.valueOf(req.getId()));
+            messageMods(config.MOD__FLAGGED);
+            environment.remove("request_id");
+            reqTable.save(req);
+        } else if (req.getStatus() == RequestStatus.CLAIMED) {
+            // When someone else has already claimed, unclaim() won't work.
+            sendMessage(sender, config.MOD__ALREADY_CLAIMED);
+        } else if (req.getStatus() == RequestStatus.CLOSED) {
+            sendMessage(sender, config.MOD__ALREADY_CLOSED);
+        }
+    }
+
+    /**
+     * Handle "/mr-note add req text" and "/mr-note remove req noteid".
+     *
+     *  @return true if the command has the correct syntax, so usage should not
+     *               be shown.
+     */
+    private boolean mrNote(CommandSender sender, String senderName, UUID senderUUID, String[] args) {
+        Request request = getRequest(sender, senderUUID, args[1], true);
+        if (request == null) {
+            return true;
+        }
+        int requestId = request.getId();
+        environment.put("request_id", Integer.toString(requestId));
+
+        if (args[0].equalsIgnoreCase("add")) {
+            Note note = new Note();
+            note.setNoteBody(concatArgs(args, 2));
+            note.setPlayerUUID(senderUUID);
+            note.setPlayer(senderName);
+            note.setRequestId(requestId);
+            noteTable.save(note);
+
+            sender.sendMessage(buildMessage(config.MOD__NOTE_ADDED));
+            return true;
+
+        } else if (args[0].equalsIgnoreCase("remove")) {
+            int noteId;
+            try {
+                noteId = Integer.parseInt(args[2]);
+            } catch (NumberFormatException e) {
+                environment.put("note_id", args[2]);
+                sender.sendMessage(buildMessage(config.MOD__NOTE_NUMBER));
+                return true;
+            }
+            environment.put("note_id", Integer.toString(noteId));
+
+            List<Note> notes = noteTable.getRequestNotes(request);
+            int noteIndex = noteId - 1;
+            if (noteIndex < 0 || noteIndex >= notes.size()) {
+                sender.sendMessage(buildMessage(config.MOD__NOTE_MISSING));
+                return true;
+            }
+
+            Note noteToRemove = notes.get(noteIndex);
+            noteTable.remove(noteToRemove);
+            sender.sendMessage(buildMessage(config.MOD__NOTE_REMOVED));
+            return true;
+
+        } else {
+            return false;
+        }
+    }
+
+    private void mrUpgrade() {
+//      getLogger().log(Level.INFO, "Upgrading database");
+//      try {
+//          SqlUpdate update = getDatabase().createSqlUpdate("ALTER TABLE modreq_requests ADD COLUMN player_uuid VARCHAR(40)");
+//          getDatabase().execute(update);
+//          getLogger().log(Level.INFO, "Created player_uuid column on modreq_requests table");
+//      } catch (PersistenceException e) {
+//          // Column already exists
+//      }
+//
+//      try {
+//          SqlUpdate update = getDatabase().createSqlUpdate("ALTER TABLE modreq_requests ADD COLUMN assigned_mod_uuid VARCHAR(40)");
+//          getDatabase().execute(update);
+//          getLogger().log(Level.INFO, "Created assigned_mod_uuid column on modreq_requests table");
+//      } catch (PersistenceException e) {
+//          // Column already exists
+//      }
+//
+//      try {
+//          SqlUpdate update = getDatabase().createSqlUpdate("ALTER TABLE modreq_notes ADD COLUMN player_uuid VARCHAR(40)");
+//          getDatabase().execute(update);
+//          getLogger().log(Level.INFO, "Created player_uuid column on modreq_notes table");
+//      } catch (PersistenceException e) {
+//          // Column already exists
+//      }
+//
+//      getDatabase().externalModification(name, includeElevated, includeElevated, includeElevated);
+
+      BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
+      scheduler.scheduleSyncDelayedTask(this, new Runnable() {
+          @Override
+          public void run() {
+              resetDatabase();
+          }
+      }, 0L);
+  }
+
+    /**
+     * Parse the specified command argument (usually args[0] in onCommand())
+     * as an integer request ID and return the corresponding Request.
+     *
+     * If useLastClaimedId is true, an ID of "-" is accepted as a reference to
+     * the most recently claimed request
+     *
+     * Errors are messaged to the command sender in the case of a malformed
+     * request ID, or if the ID does not correspond to a database entry.
+     *
+     * @param arg the command argument to parse.
+     * @param senderUUID UUID of the CommandSender.
+     * @param useLastClaimedId if true, then an arg of "-" is considered to be
+     *            a synonym for the ID of the most recently claimed request.
+     * @return the corresponding Request, or null if not found.
+     */
+    private Request getRequest(CommandSender sender, UUID senderUUID, String arg, boolean useLastClaimedId) {
+        int requestId = 0;
+
+        if (arg.equals("-")) {
+            if (useLastClaimedId) {
+                Integer claimedId = claimedIds.get(senderUUID);
+                if (claimedId != null) {
+                    requestId = claimedId;
+                }
+            }
+        } else {
+            try {
+                requestId = Integer.parseInt(arg);
+            }
+            catch (NumberFormatException ex) {
+            }
+        }
+
+        if (requestId == 0) {
+            sendMessage(sender, config.GENERAL__REQUEST_NUMBER);
+            return null;
+        }
+
+        Request req = reqTable.getRequest(requestId);
+        if (req == null) {
+            sendMessage(sender, config.GENERAL__REQUEST_ERROR);
+        }
+        return req;
+    }
+
+    private void loadClaimedIds() {
+        YamlConfiguration config = new YamlConfiguration();
+        try {
+            if (claimsFile.isFile()) {
+                config.load(claimsFile);
+                for (String uuidString : config.getKeys(false)) {
+                    try {
+                        claimedIds.put(UUID.fromString(uuidString), config.getInt(uuidString));
+                    } catch (Exception ex) {
+                    }
+                }
+            }
+        } catch (FileNotFoundException ex) {
+            getLogger().warning("cannot read " + claimsFile.getPath());
+        } catch (IOException ex) {
+            getLogger().warning("error reading " + claimsFile.getPath());
+        } catch (InvalidConfigurationException ex) {
+            getLogger().warning("cannot parse " + claimsFile.getPath());
+        }
+    }
+
+    private void saveClaimedIds() {
+        YamlConfiguration config = new YamlConfiguration();
+        for (Entry<UUID, Integer> claim : claimedIds.entrySet()) {
+            config.set(claim.getKey().toString(), claim.getValue());
+        }
+
+        try {
+            config.save(claimsFile);
+        } catch (IOException ex) {
+            getLogger().warning("most recently claimed requests could not be saved in " + claimsFile.getPath());
+        }
+    }
+
+    private String concatArgs(String[] args, int first) {
+        StringBuilder builder = new StringBuilder();
+        String sep = "";
+        for (int i = first; i < args.length; ++i) {
+            builder.append(sep).append(args[i]);
+            sep = " ";
+        }
+        return builder.toString();
     }
 
     private Location stringToLocation(String requestLocation) {
