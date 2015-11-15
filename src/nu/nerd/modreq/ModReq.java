@@ -388,7 +388,7 @@ public class ModReq extends JavaPlugin {
             messageMods(config.MOD__NEW_REQUEST);
             sendMessage(sender, config.GENERAL__REQUEST_FILED);
         } else {
-            environment.put("max_requests", config.MAX_REQUESTS.toString());
+            environment.put("max_requests", Integer.toString(config.MAX_REQUESTS));
             sendMessage(sender, config.GENERAL__MAX_REQUESTS);
         }
     }
@@ -470,7 +470,7 @@ public class ModReq extends JavaPlugin {
                 requests.addAll(reqTable.getUserRequests(limitUUID));
                 totalRequests = requests.size();
             } else {
-                requests.addAll(reqTable.getRequestPage(page - 1, 5, includeElevated, searchTerm, RequestStatus.OPEN, RequestStatus.CLAIMED));
+                requests.addAll(reqTable.getRequestPage(page - 1, config.PAGE_SIZE, includeElevated, searchTerm, RequestStatus.OPEN, RequestStatus.CLAIMED));
                 totalRequests = reqTable.getTotalRequest(includeElevated, searchTerm, RequestStatus.OPEN, RequestStatus.CLAIMED);
             }
         } else if (requestId > 0) {
@@ -898,29 +898,25 @@ public class ModReq extends JavaPlugin {
     }
 
     private Location stringToLocation(String requestLocation) {
-        Location loc;
-        double x, y, z;
-        float pitch, yaw;
-        String world;
         String[] split = requestLocation.split(",");
-        world = split[0];
-        x = Double.parseDouble(split[1]);
-        y = Double.parseDouble(split[2]);
-        z = Double.parseDouble(split[3]);
-    if (split.length > 4) {
-           yaw = Float.parseFloat(split[4]);
-           pitch = Float.parseFloat(split[5]);
-            loc = new Location(getServer().getWorld(world), x, y, z, yaw, pitch);
-    } else {
-           loc = new Location(getServer().getWorld(world), x, y, z);
+        String world = split[0];
+        double x = Double.parseDouble(split[1]);
+        double y = Double.parseDouble(split[2]);
+        double z = Double.parseDouble(split[3]);
+
+        if (split.length > 4) {
+            float yaw = Float.parseFloat(split[4]);
+            float pitch = Float.parseFloat(split[5]);
+            return new Location(getServer().getWorld(world), x, y, z, yaw, pitch);
+        } else {
+            return new Location(getServer().getWorld(world), x, y, z);
         }
-        return loc;
     }
 
     private String timestampToDateString(long timestamp) {
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(timestamp);
-        SimpleDateFormat format = new SimpleDateFormat("MMM.d@k.m.s");
+        SimpleDateFormat format = new SimpleDateFormat(config.DATE_FORMAT);
         return format.format(cal.getTime());
     }
 
@@ -1028,7 +1024,7 @@ public class ModReq extends JavaPlugin {
         }
 
         if (showPage) {
-            int numpages = (int)Math.ceil(totalRequests / config.MAX_REQUESTS.floatValue());
+            int numpages = (int)Math.ceil(totalRequests / (float) config.PAGE_SIZE);
             environment.put("page", String.valueOf(page));
             environment.put("num_pages", String.valueOf(numpages));
             messages.add(buildMessage(config.GENERAL__LIST__FOOTER));

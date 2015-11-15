@@ -47,7 +47,9 @@ public class Configuration {
     public String MOD__NOTE_MISSING;
     public String COLOUR_ONLINE;
     public String COLOUR_OFFLINE;
-    public Integer MAX_REQUESTS;
+    public int MAX_REQUESTS;
+    public int PAGE_SIZE;
+    public String DATE_FORMAT;
 
     public Configuration(ModReq plugin) {
         this.plugin = plugin;
@@ -100,5 +102,7 @@ public class Configuration {
         COLOUR_OFFLINE = plugin.getConfig().getString("colour.offline");
         COLOUR_ONLINE = plugin.getConfig().getString("colour.online");
         MAX_REQUESTS = plugin.getConfig().getInt("max-requests", 5);
+        PAGE_SIZE = plugin.getConfig().getInt("page-size", 5);
+        DATE_FORMAT = plugin.getConfig().getString("date-format");
     }
 }

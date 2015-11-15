@@ -12,7 +12,7 @@ ModReq supports two tiers of staff permissions: Moderator and Admin.  Admins are
 
 Commands
 --------
-Note: In the discussion that follows, `#` signifies an number.
+Note: In the discussion that follows, `#` signifies a number.
 
 Many commands support the use of `-`, instead of a request ID number, to signify the request that was most recently claimed by the staff member.
 
@@ -101,3 +101,14 @@ Permissions
  * `modreq.cleardb` - Admin permission to clear the request database.
  * `modreq.upgrade` - Admin permission to upgrade the request database from an older schema.
  * `modreq` - All permissions, including Moderator and Admin permssions (use with caution).
+
+
+Configuration
+-------------
+ * `messages.general.<path>` - Configurable message text sent to ordinary players.  Substitution parameters are enclosed in curly braces.
+ * `messages.mod.<path>` - Configurable message text sent to staff.  Substitution parameters are enclosed in curly braces.
+ * `colour.online` - Colour of online player names in formatted text.
+ * `colour.offline` - Colour of offline player names in formatted text.
+ * `max-requests` - The maximum number of open requests an ordinary player can make.
+ * `page-size` - The number of requests in one page of `/check` output.
+ * `date-format` - Format specifier for the date and time of a request in `java.text.SimpleDateFormat` syntax.
