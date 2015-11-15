@@ -25,6 +25,17 @@ commands:
     usage: |
            /<command> [#]: Teleport to a request
     aliases: [tpid]
+  tpinfo:
+    description: Teleport to and check a request
+    permission: modreq.teleport
+    usage: |
+           /<command> [#]: Teleport to and check a request
+    aliases: [tpi]
+  tpc:
+    description: Teleport to and claim a request
+    permission: modreq.teleport
+    usage: |
+           /<command> [#]: Teleport to and claim a request
   claim:
     description: Claim a request
     permission: modreq.claim

@@ -36,6 +36,7 @@ messages:
     flagged: "&ARequest {request_id} has been flagged for admin."
     reset: "&ADatabase has been reset."
     already-closed: "&CRequest already closed."
+    already-claimed: "&CRequest already claimed."
     note-added: "&ANote added to request {request_id} successfully."
     note-removed: "&ANote removed from request {request_id} successfully."
 colour:
