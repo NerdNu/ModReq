@@ -58,7 +58,7 @@ public class RequestTable {
     public int getTotalRequest(boolean includeElevated, String searchTerm, RequestStatus ... statuses) {
         int retVal = 0;
 
-        ExpressionList<Request> expressions = plugin.getDatabase().find(Request.class).where().in("status", statuses);
+        ExpressionList<Request> expressions = plugin.getDatabase().find(Request.class).where().in("status", (Object[]) statuses);
 
                 if (searchTerm != null)
                 {
@@ -89,7 +89,7 @@ public class RequestTable {
     public List<Request> getRequestPage(int page, int perPage, boolean includeElevated, String searchTerm, RequestStatus ... statuses) {
         List<Request> retVal = new ArrayList<Request>();
 
-        ExpressionList<Request> expressions = plugin.getDatabase().find(Request.class).where().in("status", statuses);
+        ExpressionList<Request> expressions = plugin.getDatabase().find(Request.class).where().in("status", (Object[]) statuses);
 
                 if (searchTerm != null)
                 {
