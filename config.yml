@@ -4,7 +4,7 @@ messages:
     search-error: "&CYou must specify a search term."
     request-number: "&CYou must provide a number for requests."
     request-filed: "&ARequest has been filed. Please be patient for a moderator to complete your request."
-    max-requests: "&CYou already have {max_requests} open requests, please wait for them to be completed."
+    max-requests: "&CYou already have {max_requests} open requests. Please wait for them to be completed."
     request-error: "&AEither that request doesn't exist, or you do not have permission to view it."
     no-requests: "&AYou don't have any outstanding requests."
     request-taken: "&A{mod} is now handling request {request_id}."
@@ -36,9 +36,14 @@ messages:
     flagged: "&ARequest {request_id} has been flagged for admin."
     reset: "&ADatabase has been reset."
     already-closed: "&CRequest already closed."
+    already-claimed: "&CRequest already claimed."
     note-added: "&ANote added to request {request_id} successfully."
     note-removed: "&ANote removed from request {request_id} successfully."
+    note-number: "&CYou must specify a number for the note, starting at 1."
+    note-missing: "&CRequest {request_id} has no note numbered {note_id}."
 colour:
   online: "&A"
   offline: "&C"
 max-requests: 5
+page-size: 5
+date-format: "MMM.d@HH:mm:ss"

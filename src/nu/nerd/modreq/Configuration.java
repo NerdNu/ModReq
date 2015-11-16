@@ -7,7 +7,7 @@ package nu.nerd.modreq;
 
 public class Configuration {
     private ModReq plugin;
-    
+
     public String GENERAL__PAGE_ERROR;
     public String GENERAL__SEARCH_ERROR;
     public String GENERAL__REQUEST_NUMBER;
@@ -40,23 +40,28 @@ public class Configuration {
     public String MOD__FLAGGED;
     public String MOD__RESET;
     public String MOD__ALREADY_CLOSED;
+    public String MOD__ALREADY_CLAIMED;
     public String MOD__NOTE_ADDED;
     public String MOD__NOTE_REMOVED;
+    public String MOD__NOTE_NUMBER;
+    public String MOD__NOTE_MISSING;
     public String COLOUR_ONLINE;
     public String COLOUR_OFFLINE;
-    public Integer MAX_REQUESTS;
-    
+    public int MAX_REQUESTS;
+    public int PAGE_SIZE;
+    public String DATE_FORMAT;
+
     public Configuration(ModReq plugin) {
         this.plugin = plugin;
     }
-    
+
     public void save() {
         plugin.saveConfig();
     }
-    
+
     public void load() {
         plugin.reloadConfig();
-        
+
         GENERAL__REQUEST_NUMBER = plugin.getConfig().getString("messages.general.request-number");
         GENERAL__REQUEST_FILED = plugin.getConfig().getString("messages.general.request-filed");
         GENERAL__MAX_REQUESTS = plugin.getConfig().getString("messages.general.max-requests");
@@ -89,10 +94,15 @@ public class Configuration {
         MOD__UNCLAIM = plugin.getConfig().getString("messages.mod.unclaim");
         MOD__REQUEST_TAKEN = plugin.getConfig().getString("messages.mod.request-taken");
         MOD__ALREADY_CLOSED = plugin.getConfig().getString("messages.mod.already-closed");
+        MOD__ALREADY_CLAIMED = plugin.getConfig().getString("messages.mod.already-claimed");
         MOD__NOTE_ADDED = plugin.getConfig().getString("messages.mod.note-added");
         MOD__NOTE_REMOVED = plugin.getConfig().getString("messages.mod.note-removed");
+        MOD__NOTE_NUMBER = plugin.getConfig().getString("messages.mod.note-number");
+        MOD__NOTE_MISSING = plugin.getConfig().getString("messages.mod.note-missing");
         COLOUR_OFFLINE = plugin.getConfig().getString("colour.offline");
         COLOUR_ONLINE = plugin.getConfig().getString("colour.online");
         MAX_REQUESTS = plugin.getConfig().getInt("max-requests", 5);
+        PAGE_SIZE = plugin.getConfig().getInt("page-size", 5);
+        DATE_FORMAT = plugin.getConfig().getString("date-format");
     }
 }
