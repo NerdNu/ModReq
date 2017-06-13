@@ -1,5 +1,6 @@
 package nu.nerd.modreq;
 
+import com.avaje.ebean.EbeanServer;
 import com.avaje.ebean.SqlRow;
 
 import java.io.File;
@@ -22,6 +23,8 @@ import java.util.logging.Level;
 
 import javax.persistence.PersistenceException;
 
+import nu.nerd.BukkitEbean.EbeanBuilder;
+import nu.nerd.BukkitEbean.EbeanHelper;
 import nu.nerd.modreq.database.Note;
 import nu.nerd.modreq.database.NoteTable;
 import nu.nerd.modreq.database.Request;
@@ -61,6 +64,7 @@ public class ModReq extends JavaPlugin {
     Map<UUID, Integer> claimedIds = new HashMap<UUID, Integer>();
     File claimsFile;
 
+    EbeanServer db;
     RequestTable reqTable;
     NoteTable noteTable;
 
@@ -90,11 +94,12 @@ public class ModReq extends JavaPlugin {
 
     public boolean setupDatabase() {
         try {
-            getDatabase().find(Request.class).findRowCount();
-            getDatabase().find(Note.class).findRowCount();
+            db = new EbeanBuilder(this).setClasses(getDatabaseClasses()).build();
+            db.find(Request.class).findRowCount();
+            db.find(Note.class).findRowCount();
         } catch (PersistenceException ex) {
             getLogger().log(Level.INFO, "First run, initializing database.");
-            installDDL();
+            EbeanHelper.installDDL(db);
             return true;
         }
 
@@ -113,7 +118,7 @@ public class ModReq extends JavaPlugin {
 		Set<String> unknownNames = new HashSet<String>();
 
         getLogger().log(Level.INFO, "Executing remove ddl");
-        removeDDL();
+        EbeanHelper.removeDDL(db);
 
         if (setupDatabase()) {
             getLogger().log(Level.INFO, "Schema created, converting " + rowRequests.size() + " requests and " + rowNotes.size() + " notes");
@@ -268,12 +273,15 @@ public class ModReq extends JavaPlugin {
         getLogger().log(Level.INFO, "Done");
     }
 
-    @Override
     public ArrayList<Class<?>> getDatabaseClasses() {
         ArrayList<Class<?>> list = new ArrayList<Class<?>>();
         list.add(Request.class);
         list.add(Note.class);
         return list;
+    }
+
+    public EbeanServer getDatabase() {
+        return db;
     }
 
     @Override
@@ -800,7 +808,6 @@ public class ModReq extends JavaPlugin {
 
       BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
       scheduler.scheduleSyncDelayedTask(this, new Runnable() {
-          @Override
           public void run() {
               resetDatabase();
           }

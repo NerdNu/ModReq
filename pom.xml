@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>nu.nerd</groupId>
 	<artifactId>ModReq</artifactId>
-	<version>1.7</version>
+	<version>1.8</version>
 	<packaging>jar</packaging>
 	<name>ModReq</name>
 	<description>Moderator Request Sytem</description>
@@ -33,7 +33,7 @@
 		<dependency>
 			<groupId>org.bukkit</groupId>
 			<artifactId>bukkit</artifactId>
-			<version>1.8.8-R0.1-SNAPSHOT</version>
+			<version>1.12-R0.1-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
@@ -41,6 +41,11 @@
 			<groupId>org.gestern</groupId>
 			<artifactId>bukkit-migration-tools</artifactId>
 			<version>0.1</version>
+		</dependency>
+		<dependency>
+			<groupId>nu.nerd</groupId>
+			<artifactId>BukkitEbean</artifactId>
+			<version>1.0.0</version>
 		</dependency>
 	</dependencies>
 
@@ -102,8 +107,15 @@
 							<artifactSet>
 								<includes>
 									<include>org.gestern:bukkit-migration-tools:jar:*</include>
+									<include>nu.nerd:BukkitEbean:jar:*</include>
 								</includes>
 							</artifactSet>
+							<relocations>
+								<relocation>
+									<pattern>nu.nerd.BukkitEbean</pattern>
+									<shadedPattern>nu.nerd.modreq.BukkitEbean</shadedPattern>
+								</relocation>
+							</relocations>
 						</configuration>
 					</execution>
 				</executions>
