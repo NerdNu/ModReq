@@ -100,7 +100,7 @@ Permissions
    * `modreq.notice` - Staff permission to receive broadcast messages about requests, e.g. new requests made.
  * `modreq.cleardb` - Admin permission to clear the request database.
  * `modreq.upgrade` - Admin permission to upgrade the request database from an older schema.
- * `modreq` - All permissions, including Moderator and Admin permssions (use with caution).
+ * `modreq` - All permissions, including Moderator and Admin permissions (use with caution).
 
 
 Configuration
