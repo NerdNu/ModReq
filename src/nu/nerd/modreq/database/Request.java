@@ -1,45 +1,62 @@
 package nu.nerd.modreq.database;
 
-import io.ebean.annotation.NotNull;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.table.DatabaseTable;
 
 import java.util.UUID;
 
-@Entity()
-@Table(name = "modreq_requests")
+@DatabaseTable(tableName = "modreq_requests")
 public class Request {
 
 	public enum RequestStatus {
-		CLOSED, CLAIMED, OPEN
+		/**
+		 * The request has been resolved and is closed.
+		 */
+		CLOSED,
+		/**
+		 * The request has been claimed by a moderator.
+		 */
+		CLAIMED,
+		/**
+		 * The request has yet to be handled and can be claimed.
+		 */
+		OPEN
 	}
 
-	@Id
+	@DatabaseField(generatedId = true)
 	private int id;
 
-	@NotNull
+	@DatabaseField(canBeNull = false)
 	private UUID playerUUID;
-	@NotNull
+	@DatabaseField(canBeNull = false)
 	private String playerName;
 
+	@DatabaseField
 	private UUID assignedModUUID;
+	@DatabaseField
 	private String assignedMod;
 
+	@DatabaseField
 	private String request;
 
-	@NotNull
+	@DatabaseField(canBeNull = false)
 	private long requestTime;
 
-	@NotNull
+	@DatabaseField(canBeNull = false)
 	private RequestStatus status;
 
-	@NotNull
+	@DatabaseField(canBeNull = false)
 	private String requestLocation;
+	@DatabaseField
 	private String closeMessage;
+	@DatabaseField
 	private long closeTime;
+	@DatabaseField
 	private boolean closeSeenByUser;
+	@DatabaseField
 	private boolean flagForAdmin;
+
+	public Request() {}
 
 	public void setId(int id) {
 		this.id = id;

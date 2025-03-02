@@ -19,6 +19,7 @@ public class Configuration {
 	public String GENERAL__COMPLETED;
 	public String GENERAL__COMPLETED_MESSAGE;
 	public String GENERAL__DELETED;
+	public String GENERAL__PERMISSION_ERROR;
 	public String GENERAL__LIST__HEADER;
 	public String GENERAL__LIST__ITEM;
 	public String GENERAL__LIST__FOOTER;
@@ -72,6 +73,7 @@ public class Configuration {
 		GENERAL__COMPLETED_MESSAGE = plugin.getConfig().getString("messages.general.completed-message");
 		GENERAL__DELETED = plugin.getConfig().getString("messages.general.deleted");
 		GENERAL__PAGE_ERROR = plugin.getConfig().getString("messages.general.page-error");
+		GENERAL__PERMISSION_ERROR = plugin.getConfig().getString("messages.general.permission-error");
 		GENERAL__SEARCH_ERROR = plugin.getConfig().getString("messages.general.search-error");
 		GENERAL__ITEM__DETAILS = plugin.getConfig().getString("messages.general.item.details");
 		GENERAL__ITEM__HEADER_CLAIMED = plugin.getConfig().getString("messages.general.item.header-claimed");

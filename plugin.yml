@@ -17,6 +17,7 @@ commands:
            /<command> request: Make a request to the moderators
   check:
     description: Check request queue
+    permission: modreq.check
     usage: |
            /<command> <p:#|#>: Check request queue or a specific request
   tp-id:

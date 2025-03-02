@@ -12,6 +12,8 @@ messages:
     completed: "&A{mod} completed your request."
     completed-message: "&A{mod} completed your request &F- &7{close_message}"
     deleted: "&ARequest {request_id} has been closed by you."
+    request-process-error: "Error processing request #{request_id}: {request_message}"
+    request-display-error: "Error displaying request #{request_id}"
     list:
       header: "&B---- {num_requests} Mod Requests ----"
       item: "&6{request_id}.{note_count}{admin}&6 [&A{mod}{status}&6] {time} {player} -&7 {request_message}"

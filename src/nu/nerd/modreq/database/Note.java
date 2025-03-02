@@ -1,44 +1,44 @@
 package nu.nerd.modreq.database;
 
-import io.ebean.annotation.NotNull;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.table.DatabaseTable;
 
 import java.util.UUID;
 
-@Entity
-@Table(name = "modreq_notes")
+@DatabaseTable(tableName = "modreq_notes")
 public class Note {
 
 	/**
 	 * The id of the note in the table.
 	 */
-	@Id
+	@DatabaseField(generatedId = true)
 	private int id;
 
 	/**
 	 * The uuid of the player who created the note.
 	 */
-	@NotNull
+	@DatabaseField(canBeNull = false)
 	private UUID playerUUID;
 
 	/**
 	 * The name of the player who created the note.
 	 */
-	@NotNull
+	@DatabaseField(canBeNull = false)
 	private String player;
 
 	/**
 	 * The ID of the request that the note corresponds to.
 	 */
-	@NotNull
+	@DatabaseField(canBeNull = false)
 	private int requestId;
 
 	/**
 	 * The content of the note.
 	 */
+	@DatabaseField
 	private String noteBody;
+
+	public Note(){}
 
 	/**
 	 * @return the id
