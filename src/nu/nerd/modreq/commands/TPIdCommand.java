@@ -9,6 +9,7 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitScheduler;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -52,15 +53,17 @@ public class TPIdCommand implements CommandHandler {
     public boolean execute(Player player, String name, String[] args) {
 
         UUID playerUUID = player.getUniqueId();
+        Map<String, String> reqEnvironment = new HashMap<>();
 
         getRequest(player, playerUUID, args[0], true, claimedIds, reqTable, environment,
                 configuration, plugin).thenAcceptAsync(request -> {
             if (request == null) {
                 return;
             }
-            environment.put("request_id", String.valueOf(request.getId()));
+
+            reqEnvironment.put("request_id", String.valueOf(request.getId()));
             bukkitScheduler.runTask(plugin, () -> {
-                sendMessage(player, configuration.MOD__TELEPORT, environment, configuration);
+                sendMessage(player, configuration.MOD__TELEPORT, reqEnvironment, configuration);
                 Location loc = stringToLocation(request.getRequestLocation());
                 player.teleport(loc);
             });
