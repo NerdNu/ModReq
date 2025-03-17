@@ -66,13 +66,15 @@ public class ReopenCommand implements CommandHandler {
                 request.setCloseSeenByUser(false);
                 reqTable.save(request);
 
-                environment.put("mod", player.getName());
-                environment.put("request_id", String.valueOf(request.getId()));
                 bukkitScheduler.runTask(plugin, () -> {
+                    environment.put("mod", player.getName());
+                    environment.put("request_id", String.valueOf(request.getId()));
+
                     messageMods(configuration.MOD__REOPENED, environment, configuration);
+
+                    environment.remove("mod");
+                    environment.remove("request_id");
                 });
-                environment.remove("mod");
-                environment.remove("request_id");
             }
         });
         return true;

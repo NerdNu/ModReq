@@ -6,7 +6,7 @@
 	<version>3.0</version>
 	<packaging>jar</packaging>
 	<name>ModReq</name>
-	<description>Moderator Request Sytem</description>
+	<description>Moderator Request System</description>
 	<url>https://github.com/NerdNu/ModReq</url>
 	<scm>
 		<connection>scm:git:https://github.com/NerdNu/ModReq.git</connection>

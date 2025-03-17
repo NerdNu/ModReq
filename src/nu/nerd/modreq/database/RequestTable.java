@@ -14,14 +14,30 @@ import com.j256.ormlite.stmt.Where;
 import nu.nerd.modreq.ModReq;
 import nu.nerd.modreq.database.Request.RequestStatus;
 
+/**
+ * Represents the interaction between the requests table in the database and the plugin.
+ *
+ * @version 1.0
+ * @since 3.0
+ */
 public class RequestTable {
 
 	private final Dao<Request, Integer> requestDao;
 
+	/**
+	 * Creates a new {@code RequestTable} instance.
+	 *
+	 * @param plugin The main plugin instance, used for fetching the Request DAO.
+	 */
 	public RequestTable(ModReq plugin) {
 		this.requestDao = plugin.getRequestDao();
 	}
 
+	/**
+	 * Gets a list of requests a player has open or claimed
+	 * @param uuid The UUID of the player being checked
+	 * @return The list of requests of the player
+	 */
 	public CompletableFuture<List<Request>> getUserRequests(UUID uuid) {
 		return CompletableFuture.supplyAsync(() -> {
 			try{
@@ -38,6 +54,11 @@ public class RequestTable {
 		});
 	}
 
+	/**
+	 * Gets a list of requests a player had completed for them while offline
+	 * @param uuid The UUID of the player logging in
+	 * @return The list of requests closed while a user was offline
+	 */
 	public CompletableFuture<List<Request>> getMissedClosedRequests(UUID uuid) {
 		return CompletableFuture.supplyAsync(() -> {
 			try {
@@ -55,6 +76,11 @@ public class RequestTable {
 		});
 	}
 
+	/**
+	 * Gets the number of open requests a user has
+	 * @param uuid The UUID of the user being checked
+	 * @return The number of open requests of the specified user
+	 */
 	public CompletableFuture<Integer> getNumRequestFromUser(UUID uuid) {
 		return CompletableFuture.supplyAsync(() -> {
 			try {
@@ -70,6 +96,13 @@ public class RequestTable {
 		});
 	}
 
+	/**
+	 * Gets the number of requests that match the specified criteria
+	 * @param includeElevated If admin requests should be included
+	 * @param searchTerm A term to search for in the requests
+	 * @param statuses The statuses of the modreqs to check
+	 * @return The number of requests that match
+	 */
 	public CompletableFuture<Integer> getTotalRequest(boolean includeElevated, String searchTerm, RequestStatus... statuses) {
 		return CompletableFuture.supplyAsync(() -> {
 			QueryBuilder<Request, Integer> queryBuilder = requestDao.queryBuilder();
@@ -91,8 +124,6 @@ public class RequestTable {
 					where.and().eq("flagForAdmin", false);
 				}
 
-				System.out.println("There should be a number below this :thonk:");
-				System.out.println((int) queryBuilder.countOf());
 				return (int) queryBuilder.countOf();
 
 			} catch(SQLException exception) {
@@ -101,6 +132,15 @@ public class RequestTable {
 		});
 	}
 
+	/**
+	 * Gets the requests that are to be displayed on the page specified by the player
+	 * @param page The page of requests that should be shown
+	 * @param perPage How many requests should be shown per page
+	 * @param includeElevated If admin requests should be included
+	 * @param searchTerm A term to search for in the requests
+	 * @param statuses The statuses of the modreqs to check
+	 * @return A list of requests
+	 */
 	public CompletableFuture<List<Request>> getRequestPage(int page, int perPage, boolean includeElevated, String searchTerm, RequestStatus... statuses) {
 		return CompletableFuture.supplyAsync(() -> {
 			QueryBuilder<Request, Integer> queryBuilder = requestDao.queryBuilder();
@@ -131,6 +171,11 @@ public class RequestTable {
 		});
 	}
 
+	/**
+	 * Retrieves a specific request from the database
+	 * @param id The ID of the request to get
+	 * @return The request
+	 */
 	public CompletableFuture<Request> getRequest(int id) {
 		return CompletableFuture.supplyAsync(() -> {
 			try{
@@ -141,10 +186,34 @@ public class RequestTable {
 		});
 	}
 
+	/**
+	 * Saves the request to the database
+	 * @param request The request being saved
+	 */
 	public void save(Request request) {
 		CompletableFuture.runAsync(() -> {
 			try {
 				requestDao.createOrUpdate(request);
+			} catch (SQLException exception) {
+				if (request.getId() != 0) {
+					throw new RuntimeException("Unable to save/update request" + request.getId(), exception);
+				} else {
+					throw new RuntimeException("Unable to save/update request made by " + request.getPlayerName(), exception);
+				}
+			}
+		});
+	}
+
+	/**
+	 * Saves the request to the database and returns the request for when the ID is needed
+	 * @param request The request being saved
+	 * @return The request after being saved
+	 */
+	public CompletableFuture<Request> saveAndGetId(Request request) {
+		return CompletableFuture.supplyAsync(() -> {
+			try {
+				requestDao.createOrUpdate(request);
+				return request;
 			} catch (SQLException exception) {
 				if (request.getId() != 0) {
 					throw new RuntimeException("Unable to save/update request" + request.getId(), exception);

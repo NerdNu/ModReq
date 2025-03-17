@@ -114,7 +114,7 @@ public class DoneCommand implements CommandHandler {
                                     environment.put("close_message", doneMessage);
                                     environment.put("mod", playerName);
                                     environment.put("request_id", String.valueOf(requestId));
-                                    if (doneMessage.length() != 0) {
+                                    if (!doneMessage.isEmpty()) {
                                         sendMessage(requestCreator, configuration.GENERAL__COMPLETED_MESSAGE,
                                                 environment, configuration);
                                     } else {

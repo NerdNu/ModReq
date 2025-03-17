@@ -8,14 +8,33 @@ import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.stmt.QueryBuilder;
 import nu.nerd.modreq.ModReq;
 
+/**
+ * Represents the interaction between the notes table in the database and the plugin.
+ *
+ * @version 1.0
+ * @since 3.0
+ */
 public class NoteTable {
 
+	/**
+	 * The data access object for the notes table.
+	 */
 	private final Dao<Note, Integer> noteDao;
 
+	/**
+	 * Creates a new {@code NoteTable} instance.
+	 *
+	 * @param plugin The main plugin instance, used for fetching the Note DAO.
+	 */
 	public NoteTable(ModReq plugin) {
 		this.noteDao = plugin.getNoteDao();
 	}
 
+	/**
+	 * Gets the notes attached to a request.
+	 * @param request The request being queried.
+	 * @return The notes the specified request has attached to it.
+	 */
 	public CompletableFuture<List<Note>> getRequestNotes(Request request) {
 		return CompletableFuture.supplyAsync(() -> {
 			try{
@@ -28,6 +47,11 @@ public class NoteTable {
 		});
 	}
 
+	/**
+	 * Gets the amount of notes a request has.
+	 * @param request The request being queried.
+	 * @return The amount of notes the specified request has.
+	 */
 	public CompletableFuture<Integer> getNoteCount(Request request) {
 		return CompletableFuture.supplyAsync(() -> {
 			try {
@@ -38,6 +62,10 @@ public class NoteTable {
 		});
 	}
 
+	/**
+	 * Removes the note from the database.
+	 * @param note The note being removed.
+	 */
 	public void remove(Note note) {
 		CompletableFuture.runAsync(() -> {
 			try{
@@ -48,6 +76,10 @@ public class NoteTable {
 		});
 	}
 
+	/**
+	 * Saves the note to the database.
+	 * @param note The note being saved.
+	 */
 	public void save(Note note) {
 		CompletableFuture.runAsync(() -> {
 			try{

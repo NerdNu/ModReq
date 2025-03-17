@@ -101,6 +101,6 @@ public class MRNoteCommand implements CommandHandler {
                 }
             });
         });
-        return false;
+        return true;
     }
 }

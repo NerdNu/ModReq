@@ -24,6 +24,7 @@ import static nu.nerd.modreq.utils.MessageUtils.*;
  * @since 3.0
  */
 public class CheckCommand implements CommandHandler {
+
     private final ModReq plugin;
     private RequestTable reqTable;
     private Map<String, String> environment;
@@ -131,7 +132,7 @@ public class CheckCommand implements CommandHandler {
                             sendMessage(player, configuration.GENERAL__NO_REQUESTS, environment, configuration);
                         } else {
                             messageRequestListToPlayer(player, requests, finalPage, requests.size(),
-                                    false, environment, configuration, plugin, plugin.getNoteTable());
+                                    true, environment, configuration, plugin, plugin.getNoteTable());
                         }
                     });
                 });

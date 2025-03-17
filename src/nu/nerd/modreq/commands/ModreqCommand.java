@@ -7,6 +7,7 @@ import nu.nerd.modreq.database.RequestTable;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitScheduler;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -25,7 +26,7 @@ public class ModreqCommand implements CommandHandler {
     private RequestTable reqTable;
     private Map<String, String> environment;
     private Configuration configuration;
-    private CompletableFuture<Void> future;
+    private BukkitScheduler bukkitScheduler = Bukkit.getScheduler();
 
     /**
      * Creates a new {@code ModreqCommand} instance.
@@ -38,14 +39,12 @@ public class ModreqCommand implements CommandHandler {
         this.reqTable = plugin.getReqTable();
         this.environment = plugin.getEnvironment();
         this.configuration = plugin.getConfiguration();
-        this.future = plugin.getCompleteableFuture();
     }
 
     @Override
     public boolean execute(Player player, String name, String[] args) {
 
         reqTable.getNumRequestFromUser(player.getUniqueId()).thenAccept(numRequests -> {
-            Bukkit.getScheduler().runTask(plugin, () -> {
                 if (numRequests < configuration.MAX_REQUESTS) {
                     Request req = new Request();
                     req.setPlayerUUID(player.getUniqueId());
@@ -64,15 +63,19 @@ public class ModreqCommand implements CommandHandler {
                     req.setRequestLocation(location);
                     req.setStatus(Request.RequestStatus.OPEN);
 
-                    reqTable.save(req);
-                    environment.put("request_id", String.valueOf(req.getId()));
-                    messageMods(configuration.MOD__NEW_REQUEST, environment, configuration);
-                    sendMessage(player, configuration.GENERAL__REQUEST_FILED, environment, configuration);
+                    reqTable.saveAndGetId(req).thenAccept(savedReq -> {
+                        bukkitScheduler.runTask(plugin, () -> {
+                            environment.put("request_id", String.valueOf(req.getId()));
+                            messageMods(configuration.MOD__NEW_REQUEST, environment, configuration);
+                            sendMessage(player, configuration.GENERAL__REQUEST_FILED, environment, configuration);
+                        });
+                    });
                 } else {
-                    environment.put("max_requests", Integer.toString(configuration.MAX_REQUESTS));
-                    sendMessage(player, configuration.GENERAL__MAX_REQUESTS, environment, configuration);
+                    bukkitScheduler.runTask(plugin, () -> {
+                        environment.put("max_requests", Integer.toString(configuration.MAX_REQUESTS));
+                        sendMessage(player, configuration.GENERAL__MAX_REQUESTS, environment, configuration);
+                    });
                 }
-            });
         });
         return true;
     }
