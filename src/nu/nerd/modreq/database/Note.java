@@ -46,7 +46,7 @@ public class Note {
 
 	// ----------------------------------------------------------------------------
 
-	public Note(){}
+	public Note(){ /* Empty as ORMLite requires an empty constructor to initialize this ORM class. */ }
 
 	// ----------------------------------------------------------------------------
 

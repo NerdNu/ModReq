@@ -16,26 +16,13 @@ import java.util.concurrent.CompletableFuture;
  */
 public class TPInfoCommand implements CommandHandler {
 
-    private final ModReq plugin;
-    private RequestTable reqTable;
-    private Map<String, String> environment;
-    private Configuration configuration;
-    private CompletableFuture<Void> future;
     private TPIdCommand tpIdCommand;
     private CheckCommand checkCommand;
 
     /**
      * Creates a new {@code TPInfoCommand} instance.
-     *
-     * @param plugin The main plugin instance, used for scheduling, environment variables, database access,
-     *               and asynchronous operations.
      */
-    public TPInfoCommand(ModReq plugin, TPIdCommand tpIdCommand, CheckCommand checkCommand) {
-        this.plugin = plugin;
-        this.reqTable = plugin.getReqTable();
-        this.environment = plugin.getEnvironment();
-        this.configuration = plugin.getConfiguration();
-        this.future = plugin.getCompleteableFuture();
+    public TPInfoCommand(TPIdCommand tpIdCommand, CheckCommand checkCommand) {
         this.tpIdCommand = tpIdCommand;
         this.checkCommand = checkCommand;
     }

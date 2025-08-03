@@ -27,7 +27,6 @@ public class UnclaimCommand implements CommandHandler {
     private RequestTable reqTable;
     private Map<String, String> environment;
     private Configuration configuration;
-    private CompletableFuture<Void> future;
     private Map<UUID, Integer> claimedIds;
 
     /**
@@ -41,7 +40,6 @@ public class UnclaimCommand implements CommandHandler {
         this.reqTable = plugin.getReqTable();
         this.environment = plugin.getEnvironment();
         this.configuration = plugin.getConfiguration();
-        this.future = plugin.getCompleteableFuture();
         this.claimedIds = plugin.getClaimedIds();
     }
 

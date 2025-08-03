@@ -28,10 +28,8 @@ public class ElevateCommand implements CommandHandler {
     private RequestTable reqTable;
     private Map<String, String> environment;
     private Configuration configuration;
-    private CompletableFuture<Void> future;
     private UnclaimCommand unclaimCommand;
     private Map<UUID, Integer> claimedIds;
-    private BukkitScheduler bukkitScheduler = Bukkit.getScheduler();
 
     /**
      * Creates a new {@code ElevateCommand} instance.
@@ -44,7 +42,6 @@ public class ElevateCommand implements CommandHandler {
         this.reqTable = plugin.getReqTable();
         this.environment = plugin.getEnvironment();
         this.configuration = plugin.getConfiguration();
-        this.future = plugin.getCompleteableFuture();
         this.claimedIds = plugin.getClaimedIds();
         this.unclaimCommand = unclaimCommand;
     }

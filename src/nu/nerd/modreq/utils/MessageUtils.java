@@ -200,11 +200,14 @@ public final class MessageUtils {
         messages.add(buildMessage(configuration.GENERAL__ITEM__REQUEST, environment, configuration));
         environment.remove("request_message");
 
+        System.out.println("Show notes reached!");
+        System.out.println("showNotes value: " + showNotes);
         if (showNotes) {
             noteTable.getRequestNotes(req).thenAcceptAsync(notes -> {
                 int i = 1;
 
                 for (Note note : notes) {
+                    System.out.println(note.getNoteBody());
                     Map<String, String> noteEnvironment = new HashMap<>(environment);
                     noteEnvironment.put("id", Integer.toString(i));
                     noteEnvironment.put("user", note.getPlayer());
@@ -212,11 +215,10 @@ public final class MessageUtils {
                     messages.add(buildMessage(configuration.GENERAL__ITEM__NOTE, noteEnvironment, configuration));
                     i++;
                 }
-                Bukkit.getScheduler().runTask(plugin, () -> {
-                    sender.sendMessage(messages.toArray(new String[0]));
-                });
+                Bukkit.getScheduler().runTask(plugin, () -> sender.sendMessage(messages.toArray(new String[0])));
             });
+        } else {
+            Bukkit.getScheduler().runTask(plugin, () -> sender.sendMessage(messages.toArray(new String[0])));
         }
     }
-
 }

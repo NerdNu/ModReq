@@ -44,7 +44,8 @@ public class ModreqCommand implements CommandHandler {
     @Override
     public boolean execute(Player player, String name, String[] args) {
 
-        reqTable.getNumRequestFromUser(player.getUniqueId()).thenAccept(numRequests -> {
+        if(args.length > 0) {
+            reqTable.getNumRequestFromUser(player.getUniqueId()).thenAccept(numRequests -> {
                 if (numRequests < configuration.MAX_REQUESTS) {
                     Request req = new Request();
                     req.setPlayerUUID(player.getUniqueId());
@@ -63,20 +64,21 @@ public class ModreqCommand implements CommandHandler {
                     req.setRequestLocation(location);
                     req.setStatus(Request.RequestStatus.OPEN);
 
-                    reqTable.saveAndGetId(req).thenAccept(savedReq -> {
-                        bukkitScheduler.runTask(plugin, () -> {
-                            environment.put("request_id", String.valueOf(req.getId()));
-                            messageMods(configuration.MOD__NEW_REQUEST, environment, configuration);
-                            sendMessage(player, configuration.GENERAL__REQUEST_FILED, environment, configuration);
-                        });
-                    });
+                    reqTable.saveAndGetId(req).thenAccept(savedReq -> bukkitScheduler.runTask(plugin, () -> {
+                        environment.put("request_id", String.valueOf(req.getId()));
+                        messageMods(configuration.MOD__NEW_REQUEST, environment, configuration);
+                        sendMessage(player, configuration.GENERAL__REQUEST_FILED, environment, configuration);
+                    }));
                 } else {
                     bukkitScheduler.runTask(plugin, () -> {
                         environment.put("max_requests", Integer.toString(configuration.MAX_REQUESTS));
                         sendMessage(player, configuration.GENERAL__MAX_REQUESTS, environment, configuration);
                     });
                 }
-        });
-        return true;
+            });
+            return true;
+        } else {
+            return false;
+        }
     }
 }

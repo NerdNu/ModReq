@@ -64,7 +64,12 @@ public class CheckCommand implements CommandHandler {
 
                 // If the player wants to specify a page (shorthand)
             } else if (arg.startsWith("p:")) {
-                page = Integer.parseInt(arg.substring(2));
+                try {
+                    page = Integer.parseInt(arg.substring(2));
+                } catch (NumberFormatException exception) {
+                    sendMessage(player, configuration.GENERAL__PAGE_ERROR, environment, configuration);
+                    return true;
+                }
 
                 // If the player wants to specify a page
             } else if (arg.equalsIgnoreCase("--page") || arg.equalsIgnoreCase("-p")) {
@@ -119,14 +124,12 @@ public class CheckCommand implements CommandHandler {
         final UUID finalLimitUUID = limitUUID;
         final boolean finalShowNotes = showNotes;
         final int finalPage = page;
-        final int finalRequestId = requestId;
         final boolean finalIncludeElevated = includeElevated;
         final String finalSearchTerm = searchTerm;
-        CompletableFuture<Void> future;
 
         if (page > 0) {
             if (limitUUID != null) {
-                future = reqTable.getUserRequests(limitUUID).thenAccept(requests -> {
+                reqTable.getUserRequests(limitUUID).thenAccept(requests -> {
                     bukkitScheduler.runTask(plugin, () -> {
                         if (requests.isEmpty()) {
                             sendMessage(player, configuration.GENERAL__NO_REQUESTS, environment, configuration);
@@ -154,7 +157,7 @@ public class CheckCommand implements CommandHandler {
                         Request.RequestStatus.CLAIMED
                 );
 
-                future = CompletableFuture.allOf(requestsFuture, countFuture).thenAccept(ignore -> {
+                CompletableFuture.allOf(requestsFuture, countFuture).thenAccept(ignore -> {
                     List<Request> requests = requestsFuture.join();
                     int totalCount = countFuture.join();
 
@@ -173,23 +176,20 @@ public class CheckCommand implements CommandHandler {
 
             }
         } else if (requestId > 0) {
-            future = reqTable.getRequest(requestId).thenAccept(request -> {
-                bukkitScheduler.runTask(plugin, () -> {
-                    if (request == null) {
-                        // Request doesn't exist
-                        sendMessage(player, configuration.GENERAL__REQUEST_ERROR, environment, configuration);
-                    } else if (finalLimitUUID != null && !request.getPlayerUUID().equals(finalLimitUUID)) {
-                        // Request exists but player doesn't have permission to view it
-                        sendMessage(player, configuration.GENERAL__REQUEST_ERROR, environment, configuration);
-                    } else {
-                        // Show the request details
-                        messageRequestToPlayer(player, request, finalShowNotes, environment,
-                                configuration, plugin, plugin.getNoteTable());
-                    }
-                });
-            });
+            reqTable.getRequest(requestId).thenAccept(request -> bukkitScheduler.runTask(plugin, () -> {
+                if (request == null) {
+                    // Request doesn't exist
+                    sendMessage(player, configuration.GENERAL__REQUEST_ERROR, environment, configuration);
+                } else if (finalLimitUUID != null && !request.getPlayerUUID().equals(finalLimitUUID)) {
+                    // Request exists but player doesn't have permission to view it
+                    sendMessage(player, configuration.GENERAL__REQUEST_ERROR, environment, configuration);
+                } else {
+                    // Show the request details
+                    messageRequestToPlayer(player, request, finalShowNotes, environment,
+                            configuration, plugin, plugin.getNoteTable());
+                }
+            }));
         } else {
-            future = CompletableFuture.completedFuture(null);
 
             bukkitScheduler.runTask(plugin, () ->
                     sendMessage(player, configuration.GENERAL__NO_REQUESTS, environment, configuration));

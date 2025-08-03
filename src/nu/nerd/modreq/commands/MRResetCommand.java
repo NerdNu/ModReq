@@ -29,10 +29,6 @@ import java.util.logging.Level;
 public class MRResetCommand implements CommandHandler {
 
     private final ModReq plugin;
-    private RequestTable reqTable;
-    private Map<String, String> environment;
-    private Configuration configuration;
-    private CompletableFuture<Void> future;
     ComponentLogger logger;
     String DATABASE_URL;
 
@@ -44,10 +40,6 @@ public class MRResetCommand implements CommandHandler {
      */
     public MRResetCommand(ModReq plugin) {
         this.plugin = plugin;
-        this.reqTable = plugin.getReqTable();
-        this.environment = plugin.getEnvironment();
-        this.configuration = plugin.getConfiguration();
-        this.future = plugin.getCompleteableFuture();
         logger = plugin.getComponentLogger();
         this.DATABASE_URL = plugin.getDatabaseUrl();
     }

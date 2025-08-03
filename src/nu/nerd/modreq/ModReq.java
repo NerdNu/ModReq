@@ -132,8 +132,8 @@ public class ModReq extends JavaPlugin {
         tpIdCommand = new TPIdCommand(this);
         unclaimCommand = new UnclaimCommand(this);
         elevateCommand = new ElevateCommand(this, unclaimCommand);
-        tpInfoCommand = new TPInfoCommand(this, tpIdCommand, checkCommand);
-        tpClaimCommand = new TPClaimCommand(this, claimCommand, tpIdCommand, checkCommand);
+        tpInfoCommand = new TPInfoCommand(tpIdCommand, checkCommand);
+        tpClaimCommand = new TPClaimCommand(claimCommand, tpIdCommand, checkCommand);
 
         // Command Registration
         registry.register("check", checkCommand);
@@ -252,8 +252,6 @@ public class ModReq extends JavaPlugin {
     public String getDatabaseUrl() {
         return DATABASE_URL;
     }
-
-    // AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String name, String[] args) {

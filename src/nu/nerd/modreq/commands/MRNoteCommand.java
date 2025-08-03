@@ -30,7 +30,6 @@ public class MRNoteCommand implements CommandHandler {
     private NoteTable noteTable;
     private Map<String, String> environment;
     private Configuration configuration;
-    private CompletableFuture<Void> future;
     private Map<UUID, Integer> claimedIds;
     private BukkitScheduler bukkitScheduler = Bukkit.getScheduler();
 
@@ -46,7 +45,6 @@ public class MRNoteCommand implements CommandHandler {
         this.noteTable = plugin.getNoteTable();
         this.environment = plugin.getEnvironment();
         this.configuration = plugin.getConfiguration();
-        this.future = plugin.getCompleteableFuture();
         this.claimedIds = plugin.getClaimedIds();
     }
 
