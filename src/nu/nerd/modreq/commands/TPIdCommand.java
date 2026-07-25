@@ -2,7 +2,6 @@ package nu.nerd.modreq.commands;
 
 import nu.nerd.modreq.Configuration;
 import nu.nerd.modreq.ModReq;
-import nu.nerd.modreq.database.Request;
 import nu.nerd.modreq.database.RequestTable;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -12,7 +11,6 @@ import org.bukkit.scheduler.BukkitScheduler;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 import static nu.nerd.modreq.utils.DataUtils.stringToLocation;
 import static nu.nerd.modreq.utils.MessageUtils.sendMessage;
@@ -62,7 +60,7 @@ public class TPIdCommand implements CommandHandler {
             reqEnvironment.put("request_id", String.valueOf(request.getId()));
             bukkitScheduler.runTask(plugin, () -> {
                 sendMessage(player, configuration.MOD__TELEPORT, reqEnvironment, configuration);
-                Location loc = stringToLocation(request.getRequestLocation());
+                Location loc = stringToLocation(request.getRequest_location());
                 player.teleport(loc);
             });
         });

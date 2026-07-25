@@ -17,7 +17,7 @@ messages:
     list:
       header: "&B---- {num_requests} Mod Requests ----"
       item: "&6{request_id}.{note_count}{admin}&6 [&A{mod}{status}&6] {time} {player} -&7 {request_message}"
-      footer: "&B---- Page {page} of {num_pages} ----"
+      footer: "&B---- {prev_page} - Page {page} of {num_pages} - {next_page} ----"
     item:
       header-unclaimed: "&BMod Request {request_id} - &E{status}"
       header-claimed: "&BMod Request {request_id} - &E{status} by {mod}"

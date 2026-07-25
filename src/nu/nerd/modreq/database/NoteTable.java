@@ -1,6 +1,7 @@
 package nu.nerd.modreq.database;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -39,11 +40,14 @@ public class NoteTable {
 		return CompletableFuture.supplyAsync(() -> {
 			try{
 				QueryBuilder<Note, Integer> queryBuilder = noteDao.queryBuilder();
-				queryBuilder.where().eq("requestId", request.getId());
+				queryBuilder.where().eq("request_id", request.getId());
 				return noteDao.query(queryBuilder.prepare());
 			} catch(SQLException exception) {
-				throw new RuntimeException("Failed  to fetch request notes!", exception);
+				throw new RuntimeException("Failed to fetch request notes!", exception);
 			}
+		}).exceptionally(e -> {
+			System.out.println("Failed to fetch request notes!\n" + e.getMessage());
+			return new ArrayList<>();
 		});
 	}
 
@@ -55,10 +59,13 @@ public class NoteTable {
 	public CompletableFuture<Integer> getNoteCount(Request request) {
 		return CompletableFuture.supplyAsync(() -> {
 			try {
-				return (int) noteDao.queryBuilder().where().eq("requestId", request.getId()).countOf();
+				return (int) noteDao.queryBuilder().where().eq("request_id", request.getId()).countOf();
 			} catch(SQLException exception) {
 				throw new RuntimeException("Failed to get note count", exception);
 			}
+		}).exceptionally(e -> {
+			System.out.println("Failed to get note count!\n" + e.getMessage());
+			return 0;
 		});
 	}
 
@@ -73,6 +80,9 @@ public class NoteTable {
 			} catch(SQLException exception) {
 				throw new RuntimeException("Failed to delete note", exception);
 			}
+		}).exceptionally(e -> {
+			System.out.println("Failed to delete note!\n" + e.getMessage());
+			return null;
 		});
 	}
 
@@ -87,6 +97,9 @@ public class NoteTable {
 			} catch(SQLException exception) {
 				throw new RuntimeException("Failed to save note", exception);
 			}
+		}).exceptionally(e -> {
+			System.out.println("Failed to save note!\n" + e.getMessage());
+			return null;
 		});
 	}
 

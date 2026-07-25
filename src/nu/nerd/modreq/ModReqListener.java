@@ -1,7 +1,5 @@
 package nu.nerd.modreq;
 
-import java.util.List;
-
 import nu.nerd.modreq.database.Request;
 import nu.nerd.modreq.database.Request.RequestStatus;
 
@@ -41,18 +39,18 @@ class ModReqListener implements Listener {
 
 		reqTable.getMissedClosedRequests(event.getPlayer().getUniqueId()).thenAcceptAsync(missedClosed -> {
 			for (Request req : missedClosed) {
-				String doneMessage = req.getCloseMessage();
+				String doneMessage = req.getClose_message();
 				String message = "";
 				if (doneMessage != null && doneMessage.length() != 0) {
-					message = String.format("%s completed your request - %s%s", req.getAssignedMod(), ChatColor.GRAY, doneMessage);
+					message = String.format("%s completed your request - %s%s", req.getAssigned_mod(), ChatColor.GRAY, doneMessage);
 				} else {
-					message = String.format("%s completed your request", req.getAssignedMod());
+					message = String.format("%s completed your request", req.getAssigned_mod());
 				}
 				String finalMessage = message;
 				bukkitScheduler.runTask(plugin, () -> {
 					event.getPlayer().sendMessage(ChatColor.GREEN + finalMessage);
 				});
-				req.setCloseSeenByUser(true);
+				req.setClose_seen_by_user(true);
 
 				plugin.getReqTable().save(req);
 			}

@@ -8,12 +8,10 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitScheduler;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static nu.nerd.modreq.utils.MessageUtils.*;
 
@@ -180,7 +178,7 @@ public class CheckCommand implements CommandHandler {
                 if (request == null) {
                     // Request doesn't exist
                     sendMessage(player, configuration.GENERAL__REQUEST_ERROR, environment, configuration);
-                } else if (finalLimitUUID != null && !request.getPlayerUUID().equals(finalLimitUUID)) {
+                } else if (finalLimitUUID != null && !request.getPlayer_uuid().equals(finalLimitUUID)) {
                     // Request exists but player doesn't have permission to view it
                     sendMessage(player, configuration.GENERAL__REQUEST_ERROR, environment, configuration);
                 } else {

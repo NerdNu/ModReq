@@ -5,7 +5,6 @@ import nu.nerd.modreq.ModReq;
 import nu.nerd.modreq.database.Request;
 import nu.nerd.modreq.database.RequestTable;
 import org.bukkit.Bukkit;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitScheduler;
 
@@ -65,8 +64,8 @@ public class ClaimCommand implements CommandHandler {
             bukkitScheduler.runTask(plugin, () -> {
                 if (status == Request.RequestStatus.OPEN) {
                     request.setStatus(Request.RequestStatus.CLAIMED);
-                    request.setAssignedModUUID(playerUUID);
-                    request.setAssignedMod(playerName);
+                    request.setAssigned_mod_uuid(playerUUID);
+                    request.setAssigned_mod(playerName);
                     reqTable.save(request);
 
                     environment.put("mod", playerName);
@@ -80,7 +79,7 @@ public class ClaimCommand implements CommandHandler {
                     sendMessage(player, configuration.MOD__ALREADY_CLOSED, environment, configuration);
 
                 } else if (status == Request.RequestStatus.CLAIMED) {
-                    if (request.getAssignedModUUID().equals(playerUUID)) {
+                    if (request.getAssigned_mod_uuid().equals(playerUUID)) {
                         // Already claimed by command sender. Update most recent claim.
                         claimedIds.put(playerUUID, requestId);
                     } else {
