@@ -10,7 +10,6 @@ import org.bukkit.scheduler.BukkitScheduler;
 
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 import static nu.nerd.modreq.utils.MessageUtils.*;
 import static nu.nerd.modreq.utils.MessageUtils.sendMessage;
@@ -82,7 +81,7 @@ public class DoneCommand implements CommandHandler {
                                 }
                             } else {
                                 // Player doing /done.
-                                if (request.getPlayerUUID() != null && !request.getPlayerUUID().equals(playerUUID)) {
+                                if (request.getPlayer_uuid() != null && !request.getPlayer_uuid().equals(playerUUID)) {
                                     sendMessage(player, configuration.GENERAL__CLOSE_ERROR, environment, configuration);
                                     successfullyClosed = false;
                                 }
@@ -91,15 +90,15 @@ public class DoneCommand implements CommandHandler {
 
                         if (successfullyClosed) {
                             request.setStatus(Request.RequestStatus.CLOSED);
-                            request.setCloseTime(System.currentTimeMillis());
-                            request.setCloseMessage(doneMessage);
-                            request.setAssignedModUUID(playerUUID);
-                            request.setAssignedMod(playerName);
+                            request.setClose_time(System.currentTimeMillis());
+                            request.setClose_message(doneMessage);
+                            request.setAssigned_mod_uuid(playerUUID);
+                            request.setAssigned_mod(playerName);
 
-                            Player requestCreator = getServer().getPlayerExact(request.getPlayerName());
+                            Player requestCreator = getServer().getPlayerExact(request.getPlayer_name());
                             if (requestCreator != null) {
                                 // Message request creator immediately if online.
-                                request.setCloseSeenByUser(true);
+                                request.setClose_seen_by_user(true);
 
                                 if (requestCreator.getUniqueId().equals(playerUUID)) {
                                     // Request closed by player.

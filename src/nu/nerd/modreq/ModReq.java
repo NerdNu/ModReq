@@ -39,7 +39,7 @@ public class ModReq extends JavaPlugin {
     /**
      * The JDBC URL for the SQLite DB.
      */
-    private static final String DATABASE_URL = "jdbc:sqlite:plugins/ModReq/modreq.db";
+    private static final String DATABASE_URL = "jdbc:sqlite:plugins/ModReq/ModReq.db";
     /**
      * The ConnectionSource for database transactions.
      */

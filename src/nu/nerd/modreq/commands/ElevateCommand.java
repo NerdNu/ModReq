@@ -4,13 +4,10 @@ import nu.nerd.modreq.Configuration;
 import nu.nerd.modreq.ModReq;
 import nu.nerd.modreq.database.Request;
 import nu.nerd.modreq.database.RequestTable;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitScheduler;
 
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 import static nu.nerd.modreq.utils.MessageUtils.messageMods;
 import static nu.nerd.modreq.utils.MessageUtils.sendMessage;
@@ -62,7 +59,7 @@ public class ElevateCommand implements CommandHandler {
             Request.RequestStatus status = request.getStatus();
 
             if (status == Request.RequestStatus.OPEN) {
-                request.setFlagForAdmin(true);
+                request.setFlag_for_admin(true);
                 environment.put("request_id", String.valueOf(request.getId()));
                 messageMods(configuration.MOD__FLAGGED, environment, configuration);
                 environment.remove("request_id");

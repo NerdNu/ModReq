@@ -51,6 +51,9 @@ public class RequestTable {
 			} catch(SQLException exception) {
 				throw new RuntimeException("Unable to fetch user requests", exception);
 			}
+		}).exceptionally(e -> {
+			System.out.println("Unable to fetch user requests!\n" + e.getMessage());
+			return new ArrayList<>();
 		});
 	}
 
@@ -73,6 +76,9 @@ public class RequestTable {
 			} catch(SQLException exception) {
 				throw new RuntimeException("Unable to fetch missed closed requests", exception);
 			}
+		}).exceptionally(e -> {
+			System.out.println("Unable to fetch missed closed requests!\n" + e.getMessage());
+			return new ArrayList<>();
 		});
 	}
 
@@ -93,6 +99,9 @@ public class RequestTable {
 			} catch(SQLException exception) {
 				throw new RuntimeException("Unable to fetch user " + uuid.toString() + "'s open modreq count", exception);
 			}
+		}).exceptionally(e -> {
+			System.out.println("Unable to fetch user " + uuid.toString() + "'s open modreq count!\n" + e.getMessage());
+			return 0;
 		});
 	}
 
@@ -121,7 +130,7 @@ public class RequestTable {
 				}
 
 				if(!includeElevated) {
-					where.and().eq("flagForAdmin", false);
+					where.and().eq("flag_for_admin", false);
 				}
 
 				return (int) queryBuilder.countOf();
@@ -129,6 +138,9 @@ public class RequestTable {
 			} catch(SQLException exception) {
 				throw new RuntimeException("Unable to fetch total request number", exception);
 			}
+		}).exceptionally(e -> {
+			System.out.println("Unable to fetch total request number!\n" + e.getMessage());
+			return 0;
 		});
 	}
 
@@ -159,7 +171,7 @@ public class RequestTable {
 				}
 
 				if(!includeElevated) {
-					where.and().eq("flagForAdmin", false);
+					where.and().eq("flag_for_admin", false);
 				}
 
 				queryBuilder.offset((long) page * perPage).limit((long) perPage);
@@ -168,6 +180,9 @@ public class RequestTable {
 			} catch(SQLException exception) {
 				throw new RuntimeException("Unable to fetch requests for page " + page, exception);
 			}
+		}).exceptionally(e -> {
+			System.out.println("Unable to fetch requests for page " + page + "!\n" + e.getMessage());
+			return new ArrayList<>();
 		});
 	}
 
@@ -183,6 +198,9 @@ public class RequestTable {
 			} catch(SQLException exception) {
 				throw new RuntimeException("Unable to fetch request" + id, exception);
 			}
+		}).exceptionally(e -> {
+			System.out.println("Unable to fetch request" + id + "!\n" + e.getMessage());
+			return null;
 		});
 	}
 
@@ -198,9 +216,16 @@ public class RequestTable {
 				if (request.getId() != 0) {
 					throw new RuntimeException("Unable to save/update request" + request.getId(), exception);
 				} else {
-					throw new RuntimeException("Unable to save/update request made by " + request.getPlayerName(), exception);
+					throw new RuntimeException("Unable to save/update request made by " + request.getPlayer_name(), exception);
 				}
 			}
+		}).exceptionally(e -> {
+			if (request.getId() != 0) {
+				System.out.println("Unable to save/update request!\n" + e.getMessage());
+			} else {
+				System.out.println("Unable to save/update request made by " + request.getPlayer_name() + "!\n" + e.getMessage());
+			}
+			return null;
 		});
 	}
 
@@ -218,9 +243,16 @@ public class RequestTable {
 				if (request.getId() != 0) {
 					throw new RuntimeException("Unable to save/update request" + request.getId(), exception);
 				} else {
-					throw new RuntimeException("Unable to save/update request made by " + request.getPlayerName(), exception);
+					throw new RuntimeException("Unable to save/update request made by " + request.getPlayer_name(), exception);
 				}
 			}
+		}).exceptionally(e -> {
+			if (request.getId() != 0) {
+				System.out.println("Unable to save/update request!\n" + e.getMessage());
+			} else {
+				System.out.println("Unable to save/update request made by " + request.getPlayer_name() + "!\n" + e.getMessage());
+			}
+			return null;
 		});
 	}
 

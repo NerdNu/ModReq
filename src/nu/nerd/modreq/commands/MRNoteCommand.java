@@ -11,7 +11,6 @@ import org.bukkit.scheduler.BukkitScheduler;
 
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 import static nu.nerd.modreq.utils.MessageUtils.buildMessage;
 import static nu.nerd.modreq.utils.MessageUtils.concatArgs;
@@ -64,10 +63,10 @@ public class MRNoteCommand implements CommandHandler {
 
                 if (args[0].equalsIgnoreCase("add")) {
                     Note note = new Note();
-                    note.setNoteBody(concatArgs(args, 2));
-                    note.setPlayerUUID(playerUUID);
+                    note.setNote_body(concatArgs(args, 2));
+                    note.setPlayer_uuid(playerUUID);
                     note.setPlayer(player.getName());
-                    note.setRequestId(requestId);
+                    note.setRequest_id(requestId);
                     noteTable.save(note);
 
                     player.sendMessage(buildMessage(configuration.MOD__NOTE_ADDED, environment, configuration));

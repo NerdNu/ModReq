@@ -6,10 +6,8 @@ import nu.nerd.modreq.database.Request;
 import nu.nerd.modreq.database.RequestTable;
 import org.bukkit.entity.Player;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 import static nu.nerd.modreq.utils.MessageUtils.messageMods;
 import static nu.nerd.modreq.utils.RequestUtils.getRequest;
@@ -56,11 +54,11 @@ public class UnclaimCommand implements CommandHandler {
             }
 
             if (request.getStatus() == Request.RequestStatus.CLAIMED &&
-                    (isAdmin || request.getAssignedModUUID().equals(playerUUID))) {
+                    (isAdmin || request.getAssigned_mod_uuid().equals(playerUUID))) {
 
                 request.setStatus(Request.RequestStatus.OPEN);
-                request.setAssignedModUUID(null);
-                request.setAssignedMod(null);
+                request.setAssigned_mod_uuid(null);
+                request.setAssigned_mod(null);
                 reqTable.save(request);
 
                 environment.put("mod", player.getName());

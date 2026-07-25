@@ -23,8 +23,8 @@ public class Note {
 	/**
 	 * The uuid of the player who created the note.
 	 */
-	@DatabaseField(canBeNull = false)
-	private UUID playerUUID;
+	@DatabaseField(canBeNull = false, columnName = "player_uuid")
+	private UUID player_uuid;
 
 	/**
 	 * The name of the player who created the note.
@@ -35,14 +35,14 @@ public class Note {
 	/**
 	 * The ID of the request that the note corresponds to.
 	 */
-	@DatabaseField(canBeNull = false)
-	private int requestId;
+	@DatabaseField(canBeNull = false, columnName = "request_id")
+	private int request_id;
 
 	/**
 	 * The content of the note.
 	 */
-	@DatabaseField
-	private String noteBody;
+	@DatabaseField(columnName = "note_body")
+	private String note_body;
 
 	// ----------------------------------------------------------------------------
 
@@ -68,18 +68,10 @@ public class Note {
 
 	/**
 	 * Sets the player's UUID
-	 * @param playerUUID The player's UUID
+	 * @param player_uuid The player's UUID
 	 */
-	public void setPlayerUUID(UUID playerUUID) {
-		this.playerUUID = playerUUID;
-	}
-
-	/**
-	 * Returns the player's UUID
-	 * @return the player's UUID
-	 */
-	public UUID getPlayerUUID() {
-		return this.playerUUID;
+	public void setPlayer_uuid(UUID player_uuid) {
+		this.player_uuid = player_uuid;
 	}
 
 	/**
@@ -99,32 +91,24 @@ public class Note {
 	}
 
 	/**
-	 * Returns the request ID
-	 * @return the request ID
-	 */
-	public int getRequestId() {
-		return requestId;
-	}
-
-	/**
 	 * Sets the request ID
-	 * @param requestId the request ID to set
+	 * @param request_id the request ID to set
 	 */
-	public void setRequestId(int requestId) {
-		this.requestId = requestId;
+	public void setRequest_id(int request_id) {
+		this.request_id = request_id;
 	}
 
 	/**
 	 * @return the noteBody
 	 */
-	public String getNoteBody() {
-		return noteBody;
+	public String getNote_body() {
+		return note_body;
 	}
 
 	/**
-	 * @param noteBody the noteBody to set
+	 * @param note_body the noteBody to set
 	 */
-	public void setNoteBody(String noteBody) {
-		this.noteBody = noteBody;
+	public void setNote_body(String note_body) {
+		this.note_body = note_body;
 	}
 }

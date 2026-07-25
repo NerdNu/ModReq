@@ -44,49 +44,49 @@ public class Request {
 	 * The UUID of the player who created this request.
 	 * This field cannot be null.
 	 */
-	@DatabaseField(canBeNull = false)
-	private UUID playerUUID;
+	@DatabaseField(canBeNull = false, columnName = "player_uuid")
+	private UUID player_uuid;
 
 	/**
 	 * The username of the player who created this request.
 	 * This field cannot be null.
 	 */
-	@DatabaseField(canBeNull = false)
-	private String playerName;
+	@DatabaseField(canBeNull = false, columnName = "player_name")
+	private String player_name;
 
 	/**
 	 * The UUID of the moderator assigned to handle this request.
 	 * This field can be null if no moderator has been assigned yet.
 	 */
-	@DatabaseField
-	private UUID assignedModUUID;
+	@DatabaseField(columnName = "assigned_mod_uuid")
+	private UUID assigned_mod_uuid;
 
 	/**
 	 * The username of the moderator assigned to handle this request.
 	 * This field can be null if no moderator has been assigned yet.
 	 */
-	@DatabaseField
-	private String assignedMod;
+	@DatabaseField(columnName = "assigned_mod" )
+	private String assigned_mod;
 
 	/**
 	 * The content of the request submitted by the player.
 	 * This field can be null if the request was created but not yet filled with content.
 	 */
-	@DatabaseField
+	@DatabaseField(columnName = "request")
 	private String request;
 
 	/**
 	 * The timestamp (in milliseconds since epoch) when this request was created.
 	 * This field cannot be null.
 	 */
-	@DatabaseField(canBeNull = false)
-	private long requestTime;
+	@DatabaseField(canBeNull = false, columnName = "request_time")
+	private long request_time;
 
 	/**
 	 * The current status of this request (e.g., OPEN, IN_PROGRESS, CLOSED).
 	 * This field cannot be null.
 	 */
-	@DatabaseField(canBeNull = false)
+	@DatabaseField(canBeNull = false, columnName = "status")
 	private RequestStatus status;
 
 	/**
@@ -94,36 +94,36 @@ public class Request {
 	 * This can represent in-game coordinates or other location identifiers.
 	 * This field cannot be null.
 	 */
-	@DatabaseField(canBeNull = false)
-	private String requestLocation;
+	@DatabaseField(canBeNull = false, columnName = "request_location")
+	private String request_location;
 
 	/**
 	 * The message provided when closing this request.
 	 * This field can be null if the request has not been closed or no message was provided.
 	 */
-	@DatabaseField
-	private String closeMessage;
+	@DatabaseField(columnName = "close_message")
+	private String close_message;
 
 	/**
 	 * The timestamp (in milliseconds since epoch) when this request was closed.
 	 * A value of 0 indicates the request has not been closed yet.
 	 */
-	@DatabaseField
-	private long closeTime;
+	@DatabaseField(columnName = "close_time")
+	private long close_time;
 
 	/**
 	 * Indicates whether the player has seen the closing message.
 	 * True if the player has acknowledged the request closure, false otherwise.
 	 */
-	@DatabaseField
-	private boolean closeSeenByUser;
+	@DatabaseField(columnName = "close_seen_by_user")
+	private boolean close_seen_by_user;
 
 	/**
 	 * Indicates whether this request has been flagged for administrator attention.
 	 * True if the request requires admin intervention, false otherwise.
 	 */
-	@DatabaseField
-	private boolean flagForAdmin;
+	@DatabaseField(columnName = "flag_for_admin")
+	private boolean flag_for_admin;
 
 	// ----------------------------------------------------------------------------
 
@@ -155,10 +155,10 @@ public class Request {
 	/**
 	 * Sets the UUID of the player who created this request.
 	 *
-	 * @param playerUUID The UUID of the player
+	 * @param player_uuid The UUID of the player
 	 */
-	public void setPlayerUUID(UUID playerUUID) {
-		this.playerUUID = playerUUID;
+	public void setPlayer_uuid(UUID player_uuid) {
+		this.player_uuid = player_uuid;
 	}
 
 	/**
@@ -166,17 +166,17 @@ public class Request {
 	 *
 	 * @return The UUID of the player
 	 */
-	public UUID getPlayerUUID() {
-		return this.playerUUID;
+	public UUID getPlayer_uuid() {
+		return this.player_uuid;
 	}
 
 	/**
 	 * Sets the name of the player who created this request.
 	 *
-	 * @param playerName The player's name
+	 * @param player_name The player's name
 	 */
-	public void setPlayerName(String playerName) {
-		this.playerName = playerName;
+	public void setPlayer_name(String player_name) {
+		this.player_name = player_name;
 	}
 
 	/**
@@ -184,17 +184,17 @@ public class Request {
 	 *
 	 * @return The player's name
 	 */
-	public String getPlayerName() {
-		return this.playerName;
+	public String getPlayer_name() {
+		return this.player_name;
 	}
 
 	/**
 	 * Sets the UUID of the moderator assigned to this request.
 	 *
-	 * @param assignedModUUID The UUID of the assigned moderator
+	 * @param assigned_mod_uuid The UUID of the assigned moderator
 	 */
-	public void setAssignedModUUID(UUID assignedModUUID) {
-		this.assignedModUUID = assignedModUUID;
+	public void setAssigned_mod_uuid(UUID assigned_mod_uuid) {
+		this.assigned_mod_uuid = assigned_mod_uuid;
 	}
 
 	/**
@@ -202,17 +202,17 @@ public class Request {
 	 *
 	 * @return The UUID of the assigned moderator
 	 */
-	public UUID getAssignedModUUID() {
-		return this.assignedModUUID;
+	public UUID getAssigned_mod_uuid() {
+		return this.assigned_mod_uuid;
 	}
 
 	/**
 	 * Sets the name of the moderator assigned to this request.
 	 *
-	 * @param assignedMod The name of the assigned moderator
+	 * @param assigned_mod The name of the assigned moderator
 	 */
-	public void setAssignedMod(String assignedMod) {
-		this.assignedMod = assignedMod;
+	public void setAssigned_mod(String assigned_mod) {
+		this.assigned_mod = assigned_mod;
 	}
 
 	/**
@@ -220,8 +220,8 @@ public class Request {
 	 *
 	 * @return The name of the assigned moderator
 	 */
-	public String getAssignedMod() {
-		return this.assignedMod;
+	public String getAssigned_mod() {
+		return this.assigned_mod;
 	}
 
 	/**
@@ -245,10 +245,10 @@ public class Request {
 	/**
 	 * Sets the timestamp when this request was created.
 	 *
-	 * @param requestTime The creation timestamp (in milliseconds since epoch)
+	 * @param request_time The creation timestamp (in milliseconds since epoch)
 	 */
-	public void setRequestTime(long requestTime) {
-		this.requestTime = requestTime;
+	public void setRequest_time(long request_time) {
+		this.request_time = request_time;
 	}
 
 	/**
@@ -256,8 +256,8 @@ public class Request {
 	 *
 	 * @return The creation timestamp (in milliseconds since epoch)
 	 */
-	public long getRequestTime() {
-		return this.requestTime;
+	public long getRequest_time() {
+		return this.request_time;
 	}
 
 	/**
@@ -281,10 +281,10 @@ public class Request {
 	/**
 	 * Sets the location information for this request.
 	 *
-	 * @param requestLocation The location string
+	 * @param request_location The location string
 	 */
-	public void setRequestLocation(String requestLocation) {
-		this.requestLocation = requestLocation;
+	public void setRequest_location(String request_location) {
+		this.request_location = request_location;
 	}
 
 	/**
@@ -292,17 +292,17 @@ public class Request {
 	 *
 	 * @return The location string
 	 */
-	public String getRequestLocation() {
-		return this.requestLocation;
+	public String getRequest_location() {
+		return this.request_location;
 	}
 
 	/**
 	 * Sets the closing message for this request.
 	 *
-	 * @param closeMessage The closing message
+	 * @param close_message The closing message
 	 */
-	public void setCloseMessage(String closeMessage) {
-		this.closeMessage = closeMessage;
+	public void setClose_message(String close_message) {
+		this.close_message = close_message;
 	}
 
 	/**
@@ -310,35 +310,35 @@ public class Request {
 	 *
 	 * @return The closing message
 	 */
-	public String getCloseMessage() {
-		return this.closeMessage;
+	public String getClose_message() {
+		return this.close_message;
 	}
 
 	/**
 	 * Sets the timestamp when this request was closed.
 	 *
-	 * @param closeTime The closing timestamp (in milliseconds since epoch)
+	 * @param close_time The closing timestamp (in milliseconds since epoch)
 	 */
-	public void setCloseTime(long closeTime) {
-		this.closeTime = closeTime;
+	public void setClose_time(long close_time) {
+		this.close_time = close_time;
 	}
 
 	/**
 	 * Sets whether the user has seen the closing message.
 	 *
-	 * @param closeSeenByUser True if the user has seen the closing message, false otherwise
+	 * @param close_seen_by_user True if the user has seen the closing message, false otherwise
 	 */
-	public void setCloseSeenByUser(boolean closeSeenByUser) {
-		this.closeSeenByUser = closeSeenByUser;
+	public void setClose_seen_by_user(boolean close_seen_by_user) {
+		this.close_seen_by_user = close_seen_by_user;
 	}
 
 	/**
 	 * Sets whether this request is flagged for admin attention.
 	 *
-	 * @param flagForAdmin True if this request is flagged for admin attention, false otherwise
+	 * @param flag_for_admin True if this request is flagged for admin attention, false otherwise
 	 */
-	public void setFlagForAdmin(boolean flagForAdmin) {
-		this.flagForAdmin = flagForAdmin;
+	public void setFlag_for_admin(boolean flag_for_admin) {
+		this.flag_for_admin = flag_for_admin;
 	}
 
 	/**
@@ -346,7 +346,7 @@ public class Request {
 	 *
 	 * @return True if this request is flagged for admin attention, false otherwise
 	 */
-	public boolean isFlagForAdmin() {
-		return this.flagForAdmin;
+	public boolean isFlag_for_admin() {
+		return this.flag_for_admin;
 	}
 }

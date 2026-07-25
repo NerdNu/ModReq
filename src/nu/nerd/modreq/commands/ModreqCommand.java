@@ -10,7 +10,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitScheduler;
 
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
 import static nu.nerd.modreq.utils.MessageUtils.*;
 
@@ -48,12 +47,12 @@ public class ModreqCommand implements CommandHandler {
             reqTable.getNumRequestFromUser(player.getUniqueId()).thenAccept(numRequests -> {
                 if (numRequests < configuration.MAX_REQUESTS) {
                     Request req = new Request();
-                    req.setPlayerUUID(player.getUniqueId());
-                    req.setPlayerName(player.getName());
+                    req.setPlayer_uuid(player.getUniqueId());
+                    req.setPlayer_name(player.getName());
                     String r = ChatColor.translateAlternateColorCodes('&', concatArgs(args, 0));
                     r = ChatColor.stripColor(r);
                     req.setRequest(r);
-                    req.setRequestTime(System.currentTimeMillis());
+                    req.setRequest_time(System.currentTimeMillis());
                     String location = String.format("%s,%f,%f,%f,%f,%f",
                             player.getWorld().getName(),
                             player.getLocation().getX(),
@@ -61,7 +60,7 @@ public class ModreqCommand implements CommandHandler {
                             player.getLocation().getZ(),
                             player.getLocation().getYaw(),
                             player.getLocation().getPitch());
-                    req.setRequestLocation(location);
+                    req.setRequest_location(location);
                     req.setStatus(Request.RequestStatus.OPEN);
 
                     reqTable.saveAndGetId(req).thenAccept(savedReq -> bukkitScheduler.runTask(plugin, () -> {

@@ -1,5 +1,8 @@
 package nu.nerd.modreq.utils;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import nu.nerd.modreq.Configuration;
 import nu.nerd.modreq.ModReq;
 import nu.nerd.modreq.database.Note;
@@ -13,7 +16,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permissible;
 
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static nu.nerd.modreq.utils.DataUtils.stringToLocation;
@@ -22,17 +24,19 @@ import static org.bukkit.Bukkit.getServer;
 
 public final class MessageUtils {
 
+    private static final MiniMessage MM = MiniMessage.miniMessage();
+
     private MessageUtils() {
     }
 
-    public static void sendMessage(CommandSender sender, String message, Map<String, String> environment, Configuration configuration) {
-        message = buildMessage(message, environment, configuration);
+    public static void sendMessage(CommandSender sender, String inputMessage, Map<String, String> environment, Configuration configuration) {
+        Component message = buildMessage(inputMessage, environment, configuration);
         sender.sendMessage(message);
     }
 
-    public static void messageMods(String message, Map<String, String> environment, Configuration configuration) {
+    public static void messageMods(String inputMessage, Map<String, String> environment, Configuration configuration) {
         String permission = "modreq.notice";
-        message = buildMessage(message, environment, configuration);
+        Component message = buildMessage(inputMessage, environment, configuration);
         getServer().broadcast(message, permission);
 
         Set<Permissible> subs = getServer().getPluginManager().getPermissionSubscriptions(permission);
@@ -53,7 +57,7 @@ public final class MessageUtils {
         return builder.toString();
     }
 
-    public static String buildMessage(String inputMessage, Map<String, String> environment, Configuration configuration) {
+    public static Component buildMessage(String inputMessage, Map<String, String> environment, Configuration configuration) {
         String message = inputMessage;
 
         for (Map.Entry<String, String> entry : environment.entrySet()) {
@@ -68,8 +72,9 @@ public final class MessageUtils {
             }
             message = message.replace("{" + key + "}", value);
         }
+        message = legacyToMiniMessage(message);
         message = ChatColor.translateAlternateColorCodes('&', message);
-        return message;
+        return MM.deserialize(message);
     }
 
     public static void messageRequestListToPlayer(
@@ -83,7 +88,7 @@ public final class MessageUtils {
             ModReq plugin,
             NoteTable noteTable
     ) {
-        String[] requestMessages = new String[reqs.size()];
+        Component[] requestMessages = new Component[reqs.size()];
         AtomicInteger completedCount = new AtomicInteger(0);
 
         Map<String, String> headerEnv = new HashMap<>(environment);
@@ -106,21 +111,21 @@ public final class MessageUtils {
                     Map<String, String> requestEnvironment = new HashMap<>(environment);
                     requestEnvironment.put("request_id", String.valueOf(request.getId()));
                     requestEnvironment.put("note_count", noteCount > 0 ? ChatColor.RED + " [" + noteCount + "]" : "");
-                    requestEnvironment.put("admin", (request.isFlagForAdmin() ? (ChatColor.AQUA + " [ADMIN]") : ""));
-                    requestEnvironment.put("mod", (request.getStatus() == Request.RequestStatus.CLAIMED ? (request.getAssignedMod()) : ""));
+                    requestEnvironment.put("admin", (request.isFlag_for_admin() ? (ChatColor.AQUA + " [ADMIN]") : ""));
+                    requestEnvironment.put("mod", (request.getStatus() == Request.RequestStatus.CLAIMED ? (request.getAssigned_mod()) : ""));
                     requestEnvironment.put("status",
                             request.getStatus() == Request.RequestStatus.CLAIMED ? "" :
-                            request.getStatus() == Request.RequestStatus.CLOSED ? "CLOSED by " + request.getAssignedMod() :
+                            request.getStatus() == Request.RequestStatus.CLOSED ? "CLOSED by " + request.getAssigned_mod() :
                             request.getStatus().toString());
-                    requestEnvironment.put("time", timestampToDateString(request.getRequestTime(), configuration.DATE_FORMAT));
-                    requestEnvironment.put("player", request.getPlayerName());
+                    requestEnvironment.put("time", timestampToDateString(request.getRequest_time(), configuration.DATE_FORMAT));
+                    requestEnvironment.put("player", request.getPlayer_name());
                     requestEnvironment.put("request_message", request.getRequest());
 
                     requestMessages[index] = buildMessage(configuration.GENERAL__LIST__ITEM, requestEnvironment, configuration);
 
                     if (completedCount.incrementAndGet() == reqs.size()) {
                         Bukkit.getScheduler().runTask(plugin, () -> {
-                            for (String message : requestMessages) {
+                            for (Component message : requestMessages) {
                                 sender.sendMessage(message);
                             }
 
@@ -133,11 +138,11 @@ public final class MessageUtils {
                     plugin.getLogger().severe("Error processing request #" + request.getId() + ": " + e.getMessage());
                     e.printStackTrace();
 
-                    requestMessages[index] = ChatColor.RED + "Error displaying request #" + request.getId();
+                    requestMessages[index] = Component.text("Error displaying request #" + request.getId(), NamedTextColor.RED);
 
                     if (completedCount.incrementAndGet() == reqs.size()) {
                         Bukkit.getScheduler().runTask(plugin, () -> {
-                            for (String message : requestMessages) {
+                            for (Component message : requestMessages) {
                                 sender.sendMessage(message);
                             }
 
@@ -162,6 +167,20 @@ public final class MessageUtils {
         int numpages = (int) Math.ceil(totalRequests / (float) configuration.PAGE_SIZE);
         footerEnv.put("page", String.valueOf(page));
         footerEnv.put("num_pages", String.valueOf(numpages));
+
+        if(page > 1) {
+            footerEnv.put("prev_page",
+                    "<click:run_command:'/check p:" + (page - 1) + "'><hover:show_text:'<gray>Click to go to page " + (page - 1) + "'><green>« Prev</green></hover></click>");
+        } else {
+            footerEnv.put("prev_page", "<gray>« Prev</gray>");
+        }
+
+        if (page < numpages) {
+            footerEnv.put("next_page", "<click:run_command:'/check p:" + (page + 1) + "'><hover:show_text:'<gray>Click to go to page " + (page + 1) + "'><green>Next »</green></hover></click>");
+        } else {
+            footerEnv.put("next_page", "<gray>Next »</gray>");
+        }
+
         sender.sendMessage(buildMessage(configuration.GENERAL__LIST__FOOTER, footerEnv, configuration));
     }
 
@@ -174,14 +193,14 @@ public final class MessageUtils {
             ModReq plugin,
             NoteTable noteTable
     ) {
-        List<String> messages = new ArrayList<>();
-        Location loc = stringToLocation(req.getRequestLocation());
+        List<Component> messages = new ArrayList<>();
+        Location loc = stringToLocation(req.getRequest_location());
         String location = String.format("%s, %d, %d, %d", loc.getWorld().getName(), Math.round(loc.getX()), Math.round(loc.getY()), Math.round(loc.getZ()));
 
         environment.put("status", req.getStatus().toString());
         environment.put("request_id", String.valueOf(req.getId()));
         if (req.getStatus() == Request.RequestStatus.CLAIMED) {
-            environment.put("mod", req.getAssignedMod());
+            environment.put("mod", req.getAssigned_mod());
             messages.add(buildMessage(configuration.GENERAL__ITEM__HEADER_CLAIMED, environment, configuration));
             environment.remove("mod");
         } else {
@@ -189,8 +208,8 @@ public final class MessageUtils {
         }
         environment.remove("status");
         environment.remove("request_id");
-        environment.put("player", req.getPlayerName());
-        environment.put("time", timestampToDateString(req.getRequestTime(), configuration.DATE_FORMAT));
+        environment.put("player", req.getPlayer_name());
+        environment.put("time", timestampToDateString(req.getRequest_time(), configuration.DATE_FORMAT));
         environment.put("location", location);
         messages.add(buildMessage(configuration.GENERAL__ITEM__DETAILS, environment, configuration));
         environment.remove("player");
@@ -200,18 +219,16 @@ public final class MessageUtils {
         messages.add(buildMessage(configuration.GENERAL__ITEM__REQUEST, environment, configuration));
         environment.remove("request_message");
 
-        System.out.println("Show notes reached!");
-        System.out.println("showNotes value: " + showNotes);
         if (showNotes) {
             noteTable.getRequestNotes(req).thenAcceptAsync(notes -> {
                 int i = 1;
 
                 for (Note note : notes) {
-                    System.out.println(note.getNoteBody());
+                    System.out.println(note.getNote_body());
                     Map<String, String> noteEnvironment = new HashMap<>(environment);
                     noteEnvironment.put("id", Integer.toString(i));
                     noteEnvironment.put("user", note.getPlayer());
-                    noteEnvironment.put("message", note.getNoteBody());
+                    noteEnvironment.put("message", note.getNote_body());
                     messages.add(buildMessage(configuration.GENERAL__ITEM__NOTE, noteEnvironment, configuration));
                     i++;
                 }
@@ -220,5 +237,19 @@ public final class MessageUtils {
         } else {
             Bukkit.getScheduler().runTask(plugin, () -> sender.sendMessage(messages.toArray(new String[0])));
         }
+    }
+
+    private static String legacyToMiniMessage(String message) {
+        return message
+                .replace("&0", "<black>").replace("&1", "<dark_blue>")
+                .replace("&2", "<dark_green>").replace("&3", "<dark_aqua>")
+                .replace("&4", "<dark_red>").replace("&5", "<dark_purple>")
+                .replace("&6", "<gold>").replace("&7", "<gray>")
+                .replace("&8", "<dark_gray>").replace("&9", "<blue>")
+                .replace("&A", "<green>").replace("&B", "<aqua>")
+                .replace("&C", "<red>").replace("&D", "<light_purple>")
+                .replace("&E", "<yellow>").replace("&F", "<white>")
+                .replace("&L", "<bold>").replace("&O", "<italic>")
+                .replace("&R", "<reset>");
     }
 }

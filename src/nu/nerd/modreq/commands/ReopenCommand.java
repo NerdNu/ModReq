@@ -10,7 +10,6 @@ import org.bukkit.scheduler.BukkitScheduler;
 
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 import static nu.nerd.modreq.utils.MessageUtils.messageMods;
 import static nu.nerd.modreq.utils.RequestUtils.getRequest;
@@ -56,12 +55,12 @@ public class ReopenCommand implements CommandHandler {
             }
 
             if (request.getStatus() == Request.RequestStatus.CLOSED
-                    || (request.getStatus() == Request.RequestStatus.CLAIMED && request.getAssignedModUUID()
+                    || (request.getStatus() == Request.RequestStatus.CLAIMED && request.getAssigned_mod_uuid()
                     .equals(playerUUID))) {
                 request.setStatus(Request.RequestStatus.OPEN);
-                request.setAssignedModUUID(null);
-                request.setAssignedMod(null);
-                request.setCloseSeenByUser(false);
+                request.setAssigned_mod_uuid(null);
+                request.setAssigned_mod(null);
+                request.setClose_seen_by_user(false);
                 reqTable.save(request);
 
                 bukkitScheduler.runTask(plugin, () -> {
