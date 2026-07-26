@@ -43,7 +43,7 @@ public class RequestTable {
 			try{
 				List<Request> requests = requestDao.queryBuilder()
 						.where()
-						.eq("playerUUID", uuid)
+						.eq("player_uuid", uuid)
 						.and()
 						.in("status", RequestStatus.OPEN, RequestStatus.CLAIMED)
 						.query();
@@ -67,11 +67,11 @@ public class RequestTable {
 			try {
 				return requestDao.queryBuilder()
 						.where()
-						.eq("playerUUID", uuid)
+						.eq("player_uuid", uuid)
 						.and()
 						.eq("status", RequestStatus.CLOSED)
 						.and()
-						.eq("closeSeenByUser", false)
+						.eq("close_seen_by_user", false)
 						.query();
 			} catch(SQLException exception) {
 				throw new RuntimeException("Unable to fetch missed closed requests", exception);
@@ -92,7 +92,7 @@ public class RequestTable {
 			try {
 				return (int) requestDao.queryBuilder()
 						.where()
-						.eq("playerUUID", uuid)
+						.eq("player_uuid", uuid)
 						.and()
 						.eq("status", RequestStatus.OPEN)
 						.countOf();
