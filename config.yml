@@ -15,7 +15,7 @@ messages:
     request-process-error: "Error processing request #{request_id}: {request_message}"
     request-display-error: "Error displaying request #{request_id}"
     list:
-      header: "&B---- {num_requests} Mod Requests ----"
+      header: "&B----====== {num_requests} Mod Requests ======----"
       item: "&6{request_id}.{note_count}{admin}&6 [&A{mod}{status}&6] {time} {player} -&7 {request_message}"
       footer: "&B---- {prev_page} - Page {page} of {num_pages} - {next_page} ----"
     item:

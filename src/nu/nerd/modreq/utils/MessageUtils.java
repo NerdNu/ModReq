@@ -73,7 +73,6 @@ public final class MessageUtils {
             message = message.replace("{" + key + "}", value);
         }
         message = legacyToMiniMessage(message);
-        message = ChatColor.translateAlternateColorCodes('&', message);
         return MM.deserialize(message);
     }
 
@@ -111,12 +110,13 @@ public final class MessageUtils {
                     Map<String, String> requestEnvironment = new HashMap<>(environment);
                     requestEnvironment.put("request_id", String.valueOf(request.getId()));
                     requestEnvironment.put("note_count", noteCount > 0 ? ChatColor.RED + " [" + noteCount + "]" : "");
-                    requestEnvironment.put("admin", (request.isFlag_for_admin() ? (ChatColor.AQUA + " [ADMIN]") : ""));
+                    requestEnvironment.put("note_count", noteCount > 0 ? "<red> [" + noteCount + "]</red>" : "");
+                    requestEnvironment.put("admin", (request.isFlag_for_admin() ? "<aqua> [ADMIN]</aqua>" : ""));
                     requestEnvironment.put("mod", (request.getStatus() == Request.RequestStatus.CLAIMED ? (request.getAssigned_mod()) : ""));
                     requestEnvironment.put("status",
                             request.getStatus() == Request.RequestStatus.CLAIMED ? "" :
-                            request.getStatus() == Request.RequestStatus.CLOSED ? "CLOSED by " + request.getAssigned_mod() :
-                            request.getStatus().toString());
+                                    request.getStatus() == Request.RequestStatus.CLOSED ? "CLOSED by " + request.getAssigned_mod() :
+                                            request.getStatus().toString());
                     requestEnvironment.put("time", timestampToDateString(request.getRequest_time(), configuration.DATE_FORMAT));
                     requestEnvironment.put("player", request.getPlayer_name());
                     requestEnvironment.put("request_message", request.getRequest());
@@ -224,7 +224,6 @@ public final class MessageUtils {
                 int i = 1;
 
                 for (Note note : notes) {
-                    System.out.println(note.getNote_body());
                     Map<String, String> noteEnvironment = new HashMap<>(environment);
                     noteEnvironment.put("id", Integer.toString(i));
                     noteEnvironment.put("user", note.getPlayer());
@@ -232,24 +231,40 @@ public final class MessageUtils {
                     messages.add(buildMessage(configuration.GENERAL__ITEM__NOTE, noteEnvironment, configuration));
                     i++;
                 }
-                Bukkit.getScheduler().runTask(plugin, () -> sender.sendMessage(messages.toArray(new String[0])));
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    for(Component message : messages) {
+                        sender.sendMessage(message);
+                    }
+                });
             });
         } else {
-            Bukkit.getScheduler().runTask(plugin, () -> sender.sendMessage(messages.toArray(new String[0])));
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                for(Component message : messages) {
+                    sender.sendMessage(message);
+                }
+            });
         }
     }
 
     private static String legacyToMiniMessage(String message) {
+        if (message == null) return "";
+
+        message = message.replace('§', '&');
+
         return message
                 .replace("&0", "<black>").replace("&1", "<dark_blue>")
                 .replace("&2", "<dark_green>").replace("&3", "<dark_aqua>")
                 .replace("&4", "<dark_red>").replace("&5", "<dark_purple>")
                 .replace("&6", "<gold>").replace("&7", "<gray>")
                 .replace("&8", "<dark_gray>").replace("&9", "<blue>")
-                .replace("&A", "<green>").replace("&B", "<aqua>")
-                .replace("&C", "<red>").replace("&D", "<light_purple>")
-                .replace("&E", "<yellow>").replace("&F", "<white>")
-                .replace("&L", "<bold>").replace("&O", "<italic>")
-                .replace("&R", "<reset>");
+                .replace("&a", "<green>").replace("&A", "<green>")
+                .replace("&b", "<aqua>").replace("&B", "<aqua>")
+                .replace("&c", "<red>").replace("&C", "<red>")
+                .replace("&d", "<light_purple>").replace("&D", "<light_purple>")
+                .replace("&e", "<yellow>").replace("&E", "<yellow>")
+                .replace("&f", "<white>").replace("&F", "<white>")
+                .replace("&l", "<bold>").replace("&L", "<bold>")
+                .replace("&o", "<italic>").replace("&O", "<italic>")
+                .replace("&r", "<reset>").replace("&R", "<reset>");
     }
 }
